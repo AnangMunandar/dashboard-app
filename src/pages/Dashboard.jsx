@@ -1,45 +1,38 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import StatCard from "../components/StatCard";
+import OrdersTable from "../components/OrdersTable";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabaseClient";
-
-function formatRupiah(angka) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(angka);
-}
+import { formatRupiah } from "../lib/format";
 
 function Dashboard() {
   const { user } = useAuth();
-  const [stats, setStats] = useState({ total: 0, selesai: 0, pendapatan: 0 });
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function loadStats() {
+    async function loadOrders() {
       const { data, error } = await supabase
         .from("orders")
-        .select("amount, status");
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (error) {
         setError("Gagal memuat data: " + error.message);
-        setLoading(false);
-        return;
+      } else {
+        setOrders(data);
       }
-
-      const total = data.length;
-      const selesai = data.filter((o) => o.status === "selesai").length;
-      const pendapatan = data.reduce((jumlah, o) => jumlah + Number(o.amount), 0);
-
-      setStats({ total, selesai, pendapatan });
       setLoading(false);
     }
 
-    loadStats();
+    loadOrders();
   }, []);
+
+  const total = orders.length;
+  const selesai = orders.filter((o) => o.status === "selesai").length;
+  const pendapatan = orders.reduce((jumlah, o) => jumlah + Number(o.amount), 0);
 
   return (
     <DashboardLayout>
@@ -55,20 +48,25 @@ function Dashboard() {
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           title="Total Pesanan"
-          value={loading ? "..." : stats.total}
+          value={loading ? "..." : total}
           note="Semua pesanan"
         />
         <StatCard
           title="Pesanan Selesai"
-          value={loading ? "..." : stats.selesai}
+          value={loading ? "..." : selesai}
           note="Status selesai"
         />
         <StatCard
           title="Total Pendapatan"
-          value={loading ? "..." : formatRupiah(stats.pendapatan)}
+          value={loading ? "..." : formatRupiah(pendapatan)}
           note="Jumlah semua pesanan"
         />
       </div>
+
+      <h3 className="mb-3 mt-8 text-lg font-semibold text-white">
+        Pesanan Terbaru
+      </h3>
+      <OrdersTable orders={orders.slice(0, 5)} />
     </DashboardLayout>
   );
 }
