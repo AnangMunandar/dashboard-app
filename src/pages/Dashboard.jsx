@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import StatCard from "../components/StatCard";
 import OrdersTable from "../components/OrdersTable";
+import OrderForm from "../components/OrderForm";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabaseClient";
 import { formatRupiah } from "../lib/format";
@@ -12,23 +13,24 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    async function loadOrders() {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .order("created_at", { ascending: false });
+  const loadOrders = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-      if (error) {
-        setError("Gagal memuat data: " + error.message);
-      } else {
-        setOrders(data);
-      }
-      setLoading(false);
+    if (error) {
+      setError("Gagal memuat data: " + error.message);
+    } else {
+      setError("");
+      setOrders(data);
     }
-
-    loadOrders();
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
 
   const total = orders.length;
   const selesai = orders.filter((o) => o.status === "selesai").length;
@@ -61,6 +63,10 @@ function Dashboard() {
           value={loading ? "..." : formatRupiah(pendapatan)}
           note="Jumlah semua pesanan"
         />
+      </div>
+
+      <div className="mt-8">
+        <OrderForm onAdded={loadOrders} />
       </div>
 
       <h3 className="mb-3 mt-8 text-lg font-semibold text-white">
