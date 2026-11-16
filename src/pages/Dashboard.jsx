@@ -32,6 +32,39 @@ function Dashboard() {
     loadOrders();
   }, [loadOrders]);
 
+  async function handleToggleStatus(order) {
+    const statusBaru = order.status === "selesai" ? "pending" : "selesai";
+
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: statusBaru })
+      .eq("id", order.id);
+
+    if (error) {
+      setError("Gagal mengubah status: " + error.message);
+      return;
+    }
+    loadOrders();
+  }
+
+  async function handleDelete(order) {
+    const yakin = window.confirm(
+      `Hapus pesanan atas nama ${order.customer_name}?`
+    );
+    if (!yakin) return;
+
+    const { error } = await supabase
+      .from("orders")
+      .delete()
+      .eq("id", order.id);
+
+    if (error) {
+      setError("Gagal menghapus: " + error.message);
+      return;
+    }
+    loadOrders();
+  }
+
   const total = orders.length;
   const selesai = orders.filter((o) => o.status === "selesai").length;
   const pendapatan = orders.reduce((jumlah, o) => jumlah + Number(o.amount), 0);
@@ -72,7 +105,11 @@ function Dashboard() {
       <h3 className="mb-3 mt-8 text-lg font-semibold text-white">
         Pesanan Terbaru
       </h3>
-      <OrdersTable orders={orders.slice(0, 5)} />
+      <OrdersTable
+        orders={orders.slice(0, 5)}
+        onToggleStatus={handleToggleStatus}
+        onDelete={handleDelete}
+      />
     </DashboardLayout>
   );
 }
