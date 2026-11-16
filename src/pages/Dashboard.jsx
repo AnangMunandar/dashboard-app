@@ -3,6 +3,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import StatCard from "../components/StatCard";
 import OrdersTable from "../components/OrdersTable";
 import OrderForm from "../components/OrderForm";
+import OrderFilters from "../components/OrderFilters";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabaseClient";
 import { formatRupiah } from "../lib/format";
@@ -12,6 +13,8 @@ function Dashboard() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("semua");
 
   const loadOrders = useCallback(async () => {
     const { data, error } = await supabase
@@ -69,6 +72,14 @@ function Dashboard() {
   const selesai = orders.filter((o) => o.status === "selesai").length;
   const pendapatan = orders.reduce((jumlah, o) => jumlah + Number(o.amount), 0);
 
+  const filteredOrders = orders.filter((o) => {
+    const cocokNama = o.customer_name
+      .toLowerCase()
+      .includes(search.trim().toLowerCase());
+    const cocokStatus = statusFilter === "semua" || o.status === statusFilter;
+    return cocokNama && cocokStatus;
+  });
+
   return (
     <DashboardLayout>
       <h2 className="text-2xl font-bold text-white">Selamat datang</h2>
@@ -103,13 +114,22 @@ function Dashboard() {
       </div>
 
       <h3 className="mb-3 mt-8 text-lg font-semibold text-white">
-        Pesanan Terbaru
+        Daftar Pesanan
       </h3>
+      <OrderFilters
+        search={search}
+        onSearch={setSearch}
+        status={statusFilter}
+        onStatus={setStatusFilter}
+      />
       <OrdersTable
-        orders={orders.slice(0, 5)}
+        orders={filteredOrders}
         onToggleStatus={handleToggleStatus}
         onDelete={handleDelete}
       />
+      <p className="mt-2 text-xs text-slate-500">
+        Menampilkan {filteredOrders.length} dari {total} pesanan
+      </p>
     </DashboardLayout>
   );
 }
