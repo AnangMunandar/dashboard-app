@@ -496,7 +496,7 @@ function Dashboard() {
       )}
 
       {/* Statistik Pesanan */}
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
         <StatCard
           title="Total Pesanan"
           value={loading ? "..." : total}
@@ -523,7 +523,7 @@ function Dashboard() {
         Ringkasan Produk
       </h3>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
         <StatCard
           title="Total Produk"
           value={loadingProducts ? "..." : totalProduk}
