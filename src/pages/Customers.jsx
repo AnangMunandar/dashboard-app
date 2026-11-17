@@ -1,7 +1,6 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
-import StatCard from "../components/StatCard";
 import { supabase } from "../lib/supabaseClient";
 import { formatRupiah } from "../lib/format";
 
@@ -11,6 +10,9 @@ const emptyForm = {
   email: "",
   address: "",
 };
+
+const inputClass =
+  "w-full min-w-0 rounded-lg border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-white outline-none focus:border-sky-500";
 
 function Customers() {
   const [customers, setCustomers] = useState([]);
@@ -221,348 +223,400 @@ function Customers() {
 
   return (
     <DashboardLayout>
-      <h2 className="text-2xl font-bold text-white">
-        Manajemen Pelanggan
-      </h2>
+      <div className="min-w-0">
+        <h2 className="text-xl font-bold text-white sm:text-2xl">
+          Manajemen Pelanggan
+        </h2>
 
-      <p className="mt-1 text-slate-300">
-        Kelola dan pantau aktivitas pelanggan MasMuns.
-      </p>
-
-      {error && (
-        <p className="mt-4 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">
-          {error}
+        <p className="mt-2 text-sm text-slate-300 sm:text-base">
+          Kelola dan pantau aktivitas pelanggan MasMuns.
         </p>
-      )}
 
-      {success && (
-        <p className="mt-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">
-          {success}
-        </p>
-      )}
+        {/* PESAN ERROR DAN SUKSES */}
+        {error && (
+          <p className="mt-4 break-words rounded-lg bg-red-500/10 px-3 py-3 text-sm text-red-400">
+            {error}
+          </p>
+        )}
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard
-          title="Total Pelanggan"
-          value={loading ? "..." : totalCustomers}
-          note="Pelanggan terdaftar"
-        />
+        {success && (
+          <p className="mt-4 break-words rounded-lg bg-emerald-500/10 px-3 py-3 text-sm text-emerald-400">
+            {success}
+          </p>
+        )}
 
-        <StatCard
-          title="Total Transaksi"
-          value={loading ? "..." : totalTransactions}
-          note="Semua pesanan"
-        />
-
-        <StatCard
-          title="Total Belanja"
-          value={loading ? "..." : formatRupiah(totalSpending)}
-          note="Akumulasi seluruh pesanan"
-        />
-      </div>
-
-      <div className="mt-8 rounded-xl border border-slate-800 bg-slate-950 p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-white">
-              Daftar Pelanggan
+        {/* STATISTIK */}
+        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 sm:p-5">
+            <p className="text-sm text-slate-400">Total Pelanggan</p>
+            <h3 className="mt-2 text-2xl font-bold text-white">
+              {loading ? "..." : totalCustomers}
             </h3>
-            <p className="mt-1 text-sm text-slate-400">
-              Klik nama untuk melihat riwayat transaksi.
+            <p className="mt-1 text-xs text-slate-500">
+              Pelanggan terdaftar
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={openAddForm}
-            className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500"
-          >
-            + Tambah Pelanggan
-          </button>
-        </div>
-
-        {showForm && (
-          <form
-            onSubmit={handleSubmit}
-            className="mt-6 rounded-lg border border-slate-800 bg-slate-900 p-5"
-          >
-            <h4 className="mb-4 font-semibold text-white">
-              {editingCustomer ? "Edit Pelanggan" : "Form Tambah Pelanggan"}
-            </h4>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              {[
-                {
-                  label: "Nama Pelanggan",
-                  key: "name",
-                  placeholder: "Nama pelanggan",
-                  required: true,
-                },
-                {
-                  label: "Nomor Telepon",
-                  key: "phone",
-                  placeholder: "08xxxxxxxxxx",
-                },
-                {
-                  label: "Email",
-                  key: "email",
-                  placeholder: "email@example.com",
-                  type: "email",
-                },
-                {
-                  label: "Alamat",
-                  key: "address",
-                  placeholder: "Alamat pelanggan",
-                },
-              ].map((field) => (
-                <div key={field.key}>
-                  <label className="mb-2 block text-sm text-slate-300">
-                    {field.label}
-                    {field.required ? " *" : ""}
-                  </label>
-                  <input
-                    type={field.type || "text"}
-                    required={field.required || false}
-                    value={form[field.key]}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        [field.key]: e.target.value,
-                      })
-                    }
-                    placeholder={field.placeholder}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2 text-sm text-white outline-none focus:border-sky-500"
-                  />
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-5 flex flex-wrap gap-3">
-              <button
-                type="submit"
-                disabled={saving}
-                className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
-              >
-                {saving
-                  ? "Menyimpan..."
-                  : editingCustomer
-                    ? "Simpan Perubahan"
-                    : "Simpan Pelanggan"}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setShowForm(false);
-                  setEditingCustomer(null);
-                  setForm(emptyForm);
-                }}
-                className="rounded-lg border border-slate-700 px-5 py-2 text-sm text-slate-300 hover:bg-slate-800"
-              >
-                Batal
-              </button>
-            </div>
-          </form>
-        )}
-
-        <div className="mt-5">
-          <input
-            type="text"
-            placeholder="Cari nama, telepon, atau email..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-white outline-none focus:border-sky-500"
-          />
-        </div>
-
-        {loading ? (
-          <p className="py-10 text-center text-slate-400">
-            Memuat data pelanggan...
-          </p>
-        ) : filteredCustomers.length === 0 ? (
-          <p className="py-10 text-center text-slate-400">
-            Tidak ada pelanggan ditemukan.
-          </p>
-        ) : (
-          <div className="mt-5 overflow-x-auto">
-            <table className="w-full min-w-[1050px] text-left text-sm">
-              <thead className="border-b border-slate-800 text-slate-400">
-                <tr>
-                  <th className="px-4 py-3">Nama Pelanggan</th>
-                  <th className="px-4 py-3">Telepon</th>
-                  <th className="px-4 py-3">Total Transaksi</th>
-                  <th className="px-4 py-3">Total Belanja</th>
-                  <th className="px-4 py-3">Pesanan Terakhir</th>
-                  <th className="px-4 py-3">Aksi</th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y divide-slate-800 text-slate-300">
-                {filteredCustomers.map((customer) => {
-                  const customerOrders = getCustomerOrders(customer);
-
-                  const spending = customerOrders.reduce(
-                    (total, order) =>
-                      total + Number(order.amount || 0),
-                    0
-                  );
-
-                  const latestOrder = customerOrders[0]?.created_at;
-
-                  return (
-                    <tr key={customer.id} className="hover:bg-slate-900">
-                      <td className="px-4 py-4">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedCustomer(customer)}
-                          className="font-semibold text-sky-400 hover:underline"
-                        >
-                          {customer.name}
-                        </button>
-                        {customer.email && (
-                          <p className="mt-1 text-xs text-slate-500">
-                            {customer.email}
-                          </p>
-                        )}
-                      </td>
-
-                      <td className="px-4 py-4">
-                        {customer.phone || "-"}
-                      </td>
-
-                      <td className="px-4 py-4">
-                        {customerOrders.length} pesanan
-                      </td>
-
-                      <td className="px-4 py-4 font-medium text-sky-400">
-                        {formatRupiah(spending)}
-                      </td>
-
-                      <td className="px-4 py-4">
-                        {latestOrder
-                          ? new Date(latestOrder).toLocaleDateString("id-ID")
-                          : "-"}
-                      </td>
-
-                      <td className="px-4 py-4">
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => openEditForm(customer)}
-                            className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-400 hover:bg-amber-500/20"
-                          >
-                            Edit
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteCustomer(customer)}
-                            className="rounded-lg bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/20"
-                          >
-                            Hapus
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 sm:p-5">
+            <p className="text-sm text-slate-400">Total Transaksi</p>
+            <h3 className="mt-2 text-2xl font-bold text-white">
+              {loading ? "..." : totalTransactions}
+            </h3>
+            <p className="mt-1 text-xs text-slate-500">
+              Semua pesanan
+            </p>
           </div>
-        )}
 
-        <p className="mt-4 text-xs text-slate-500">
-          Menampilkan {filteredCustomers.length} dari {totalCustomers} pelanggan.
-        </p>
-      </div>
+          <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 sm:col-span-2 sm:p-5 xl:col-span-1">
+            <p className="text-sm text-slate-400">Total Belanja</p>
+            <h3 className="mt-2 break-words text-xl font-bold text-sky-400">
+              {loading ? "..." : formatRupiah(totalSpending)}
+            </h3>
+            <p className="mt-1 text-xs text-slate-500">
+              Akumulasi seluruh pesanan
+            </p>
+          </div>
+        </div>
 
-      {selectedCustomer && (
-        <div className="mt-8 rounded-xl border border-sky-800 bg-slate-950 p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {/* DAFTAR PELANGGAN */}
+        <div className="mt-6 rounded-xl border border-slate-800 bg-slate-950 p-4 sm:p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm text-slate-400">
-                Detail Riwayat Pelanggan
-              </p>
-              <h3 className="mt-1 text-xl font-bold text-white">
-                {selectedCustomer.name}
+              <h3 className="text-lg font-semibold text-white">
+                Daftar Pelanggan
               </h3>
               <p className="mt-1 text-sm text-slate-400">
-                {selectedCustomer.phone || "Tidak ada nomor telepon"}
-              </p>
-              <p className="text-sm text-slate-400">
-                {selectedCustomer.email || "Tidak ada email"}
-              </p>
-              <p className="text-sm text-slate-400">
-                {selectedCustomer.address || "Tidak ada alamat"}
+                Klik nama untuk melihat riwayat transaksi.
               </p>
             </div>
 
             <button
               type="button"
-              onClick={() => setSelectedCustomer(null)}
-              className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
+              onClick={openAddForm}
+              className="w-full rounded-lg bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-500 sm:w-auto"
             >
-              Tutup Detail
+              + Tambah Pelanggan
             </button>
           </div>
 
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-lg bg-slate-900 p-4">
-              <p className="text-sm text-slate-400">Total Transaksi</p>
-              <p className="mt-2 text-2xl font-bold text-white">
-                {selectedOrders.length}
-              </p>
-            </div>
+          {/* FORM TAMBAH DAN EDIT */}
+          {showForm && (
+            <form
+              onSubmit={handleSubmit}
+              className="mt-5 rounded-lg border border-slate-800 bg-slate-900 p-4 sm:p-5"
+            >
+              <h4 className="mb-4 font-semibold text-white">
+                {editingCustomer
+                  ? "Edit Pelanggan"
+                  : "Form Tambah Pelanggan"}
+              </h4>
 
-            <div className="rounded-lg bg-slate-900 p-4">
-              <p className="text-sm text-slate-400">Total Belanja</p>
-              <p className="mt-2 text-2xl font-bold text-sky-400">
-                {formatRupiah(selectedTotal)}
-              </p>
-            </div>
-          </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {[
+                  {
+                    label: "Nama Pelanggan",
+                    key: "name",
+                    placeholder: "Nama pelanggan",
+                    required: true,
+                  },
+                  {
+                    label: "Nomor Telepon",
+                    key: "phone",
+                    placeholder: "08xxxxxxxxxx",
+                  },
+                  {
+                    label: "Email",
+                    key: "email",
+                    placeholder: "email@example.com",
+                    type: "email",
+                  },
+                  {
+                    label: "Alamat",
+                    key: "address",
+                    placeholder: "Alamat pelanggan",
+                  },
+                ].map((field) => (
+                  <div key={field.key}>
+                    <label className="mb-2 block text-sm text-slate-300">
+                      {field.label}
+                      {field.required ? " *" : ""}
+                    </label>
 
-          <h4 className="mb-3 mt-6 font-semibold text-white">
-            Riwayat Transaksi
-          </h4>
-
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[550px] text-left text-sm">
-              <thead className="border-b border-slate-800 text-slate-400">
-                <tr>
-                  <th className="px-4 py-3">Tanggal</th>
-                  <th className="px-4 py-3">Nominal</th>
-                  <th className="px-4 py-3">Status</th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y divide-slate-800 text-slate-300">
-                {selectedOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td className="px-4 py-4">
-                      {new Date(order.created_at).toLocaleDateString("id-ID")}
-                    </td>
-                    <td className="px-4 py-4 font-medium text-white">
-                      {formatRupiah(Number(order.amount || 0))}
-                    </td>
-                    <td className="px-4 py-4">
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${
-                          order.status === "selesai"
-                            ? "bg-emerald-500/10 text-emerald-400"
-                            : "bg-amber-500/10 text-amber-400"
-                        }`}
-                      >
-                        {order.status || "Belum ada status"}
-                      </span>
-                    </td>
-                  </tr>
+                    <input
+                      type={field.type || "text"}
+                      required={field.required || false}
+                      value={form[field.key]}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          [field.key]: e.target.value,
+                        })
+                      }
+                      placeholder={field.placeholder}
+                      className={inputClass}
+                    />
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="w-full rounded-lg bg-emerald-600 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50 sm:w-auto"
+                >
+                  {saving
+                    ? "Menyimpan..."
+                    : editingCustomer
+                      ? "Simpan Perubahan"
+                      : "Simpan Pelanggan"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditingCustomer(null);
+                    setForm(emptyForm);
+                  }}
+                  className="w-full rounded-lg border border-slate-700 px-5 py-3 text-sm text-slate-300 hover:bg-slate-800 sm:w-auto"
+                >
+                  Batal
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* PENCARIAN */}
+          <div className="mt-5">
+            <input
+              type="text"
+              placeholder="Cari nama, telepon, atau email..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className={inputClass}
+            />
           </div>
+
+          {/* TABEL PELANGGAN */}
+          {loading ? (
+            <p className="py-10 text-center text-slate-400">
+              Memuat data pelanggan...
+            </p>
+          ) : filteredCustomers.length === 0 ? (
+            <p className="py-10 text-center text-slate-400">
+              Tidak ada pelanggan ditemukan.
+            </p>
+          ) : (
+            <div className="mt-5 overflow-x-auto rounded-lg border border-slate-800">
+              <table className="w-full min-w-[1050px] text-left text-sm">
+                <thead className="border-b border-slate-800 bg-slate-900 text-slate-400">
+                  <tr>
+                    <th className="px-4 py-3">Nama Pelanggan</th>
+                    <th className="px-4 py-3">Telepon</th>
+                    <th className="px-4 py-3">Total Transaksi</th>
+                    <th className="px-4 py-3">Total Belanja</th>
+                    <th className="px-4 py-3">Pesanan Terakhir</th>
+                    <th className="px-4 py-3">Aksi</th>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-slate-800 text-slate-300">
+                  {filteredCustomers.map((customer) => {
+                    const customerOrders = getCustomerOrders(customer);
+
+                    const spending = customerOrders.reduce(
+                      (total, order) =>
+                        total + Number(order.amount || 0),
+                      0
+                    );
+
+                    const latestOrder = customerOrders[0]?.created_at;
+
+                    return (
+                      <tr
+                        key={customer.id}
+                        className="hover:bg-slate-900"
+                      >
+                        <td className="px-4 py-4">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedCustomer(customer)}
+                            className="font-semibold text-sky-400 hover:underline"
+                          >
+                            {customer.name}
+                          </button>
+
+                          {customer.email && (
+                            <p className="mt-1 text-xs text-slate-500">
+                              {customer.email}
+                            </p>
+                          )}
+                        </td>
+
+                        <td className="px-4 py-4">
+                          {customer.phone || "-"}
+                        </td>
+
+                        <td className="px-4 py-4">
+                          {customerOrders.length} pesanan
+                        </td>
+
+                        <td className="px-4 py-4 font-medium text-sky-400">
+                          {formatRupiah(spending)}
+                        </td>
+
+                        <td className="px-4 py-4">
+                          {latestOrder
+                            ? new Date(latestOrder).toLocaleDateString("id-ID")
+                            : "-"}
+                        </td>
+
+                        <td className="px-4 py-4">
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => openEditForm(customer)}
+                              className="rounded-lg bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-400 hover:bg-amber-500/20"
+                            >
+                              Edit
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteCustomer(customer)}
+                              className="rounded-lg bg-red-500/10 px-4 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/20"
+                            >
+                              Hapus
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <p className="mt-4 text-xs text-slate-500">
+            Menampilkan {filteredCustomers.length} dari {totalCustomers} pelanggan.
+          </p>
+
+          <p className="mt-2 text-xs text-slate-500 sm:hidden">
+            Geser tabel ke kiri atau kanan untuk melihat seluruh kolom.
+          </p>
         </div>
-      )}
+
+        {/* DETAIL DAN RIWAYAT PELANGGAN */}
+        {selectedCustomer && (
+          <div className="mt-6 rounded-xl border border-sky-800 bg-slate-950 p-4 sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-sm text-slate-400">
+                  Detail Riwayat Pelanggan
+                </p>
+
+                <h3 className="mt-1 break-words text-xl font-bold text-white">
+                  {selectedCustomer.name}
+                </h3>
+
+                <p className="mt-1 break-words text-sm text-slate-400">
+                  {selectedCustomer.phone || "Tidak ada nomor telepon"}
+                </p>
+
+                <p className="break-words text-sm text-slate-400">
+                  {selectedCustomer.email || "Tidak ada email"}
+                </p>
+
+                <p className="break-words text-sm text-slate-400">
+                  {selectedCustomer.address || "Tidak ada alamat"}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedCustomer(null)}
+                className="w-full rounded-lg border border-slate-700 px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 sm:w-auto"
+              >
+                Tutup Detail
+              </button>
+            </div>
+
+            <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="rounded-lg bg-slate-900 p-4">
+                <p className="text-sm text-slate-400">
+                  Total Transaksi
+                </p>
+                <p className="mt-2 text-2xl font-bold text-white">
+                  {selectedOrders.length}
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-slate-900 p-4">
+                <p className="text-sm text-slate-400">
+                  Total Belanja
+                </p>
+                <p className="mt-2 break-words text-xl font-bold text-sky-400">
+                  {formatRupiah(selectedTotal)}
+                </p>
+              </div>
+            </div>
+
+            <h4 className="mb-3 mt-6 font-semibold text-white">
+              Riwayat Transaksi
+            </h4>
+
+            {selectedOrders.length === 0 ? (
+              <p className="py-5 text-center text-sm text-slate-400">
+                Belum ada transaksi untuk pelanggan ini.
+              </p>
+            ) : (
+              <div className="overflow-x-auto rounded-lg border border-slate-800">
+                <table className="w-full min-w-[550px] text-left text-sm">
+                  <thead className="border-b border-slate-800 bg-slate-900 text-slate-400">
+                    <tr>
+                      <th className="px-4 py-3">Tanggal</th>
+                      <th className="px-4 py-3">Nominal</th>
+                      <th className="px-4 py-3">Status</th>
+                    </tr>
+                  </thead>
+
+                  <tbody className="divide-y divide-slate-800 text-slate-300">
+                    {selectedOrders.map((order) => (
+                      <tr key={order.id}>
+                        <td className="px-4 py-4">
+                          {new Date(order.created_at).toLocaleDateString("id-ID")}
+                        </td>
+
+                        <td className="px-4 py-4 font-medium text-white">
+                          {formatRupiah(Number(order.amount || 0))}
+                        </td>
+
+                        <td className="px-4 py-4">
+                          <span
+                            className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium ${
+                              order.status === "selesai"
+                                ? "bg-emerald-500/10 text-emerald-400"
+                                : "bg-amber-500/10 text-amber-400"
+                            }`}
+                          >
+                            {order.status || "Belum ada status"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <p className="mt-2 text-xs text-slate-500 sm:hidden">
+              Geser tabel riwayat ke kiri atau kanan jika diperlukan.
+            </p>
+          </div>
+        )}
+      </div>
     </DashboardLayout>
   );
 }
