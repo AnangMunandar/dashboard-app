@@ -5,6 +5,7 @@ const menu = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/products", label: "Produk" },
   { to: "/customers", label: "Pelanggan" },
+  { to: "/reports", label: "Laporan" },
 ];
 
 function Sidebar() {
