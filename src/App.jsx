@@ -8,6 +8,7 @@ import Products from "./pages/Products";
 import Customers from "./pages/Customers";
 import Reports from "./pages/Reports";
 import Expenses from "./pages/Expenses";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -80,6 +81,15 @@ function App() {
         element={
           <ProtectedRoute>
             <Expenses />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
           </ProtectedRoute>
         }
       />

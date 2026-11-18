@@ -17,6 +17,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { supabase } from "../lib/supabaseClient";
 import { formatRupiah } from "../lib/format";
 
+// Format tanggal lokal
 function tanggalLokal(value) {
   const date = new Date(value);
 
@@ -27,15 +28,57 @@ function tanggalLokal(value) {
   return `${tahun}-${bulan}-${hari}`;
 }
 
+// Memuat logo dan mengubahnya menjadi PNG untuk PDF
+async function loadImageAsDataURL(url) {
+  if (!url) return null;
+
+  try {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error("Gagal mengambil logo.");
+    }
+
+    const blob = await response.blob();
+    const imageBitmap = await createImageBitmap(blob);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = imageBitmap.width;
+    canvas.height = imageBitmap.height;
+
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      imageBitmap.close();
+      throw new Error("Gagal membuat canvas.");
+    }
+
+    context.drawImage(imageBitmap, 0, 0);
+    imageBitmap.close();
+
+    return canvas.toDataURL("image/png");
+  } catch (error) {
+    console.error("Gagal memuat logo PDF:", error);
+    return null;
+  }
+}
+
 function Reports() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Identitas bisnis Admin yang sedang login
+  const [businessProfile, setBusinessProfile] = useState({
+    business_name: "Bisnis Saya",
+    logo_url: "",
+  });
+
   const [tanggalMulai, setTanggalMulai] = useState("");
   const [tanggalAkhir, setTanggalAkhir] = useState("");
   const [statusFilter, setStatusFilter] = useState("semua");
 
+  // Memuat data transaksi
   useEffect(() => {
     async function loadOrders() {
       setLoading(true);
@@ -73,6 +116,34 @@ function Reports() {
     loadOrders();
   }, []);
 
+  // Memuat identitas bisnis Admin
+  useEffect(() => {
+    async function loadBusinessProfile() {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) return;
+
+      const { data, error } = await supabase
+        .from("business_profiles")
+        .select("business_name, logo_url")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!error && data) {
+        setBusinessProfile({
+          business_name: data.business_name || "Bisnis Saya",
+          logo_url: data.logo_url || "",
+        });
+      }
+    }
+
+    loadBusinessProfile();
+  }, []);
+
+  // Filter transaksi
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
       const tanggal = tanggalLokal(order.created_at);
@@ -91,6 +162,7 @@ function Reports() {
     });
   }, [orders, tanggalMulai, tanggalAkhir, statusFilter]);
 
+  // Ringkasan transaksi
   const totalTransaksi = filteredOrders.length;
 
   const totalPendapatan = filteredOrders.reduce(
@@ -106,6 +178,7 @@ function Reports() {
     (order) => order.status === "pending"
   ).length;
 
+  // Data grafik
   const chartData = useMemo(() => {
     const grouped = {};
 
@@ -132,32 +205,107 @@ function Reports() {
     return Object.values(grouped).reverse();
   }, [filteredOrders]);
 
+  // Reset filter
   function resetFilter() {
     setTanggalMulai("");
     setTanggalAkhir("");
     setStatusFilter("semua");
   }
 
+  // Export Excel dengan format profesional
   function exportExcel() {
-    const data = filteredOrders.map((order, index) => ({
-      No: index + 1,
-      Pelanggan: order.customer_name || "-",
-      Jumlah: Number(order.amount || 0),
-      Status: order.status || "-",
-      Tanggal: new Date(order.created_at).toLocaleDateString("id-ID"),
-    }));
+    const namaBisnis =
+      businessProfile.business_name || "Bisnis Saya";
 
-    const worksheet = XLSX.utils.json_to_sheet(data);
-
-    worksheet["!cols"] = [
-      { wch: 8 },
-      { wch: 25 },
-      { wch: 18 },
-      { wch: 15 },
-      { wch: 18 },
+    const data = [
+      [namaBisnis],
+      ["LAPORAN PENJUALAN"],
+      [],
+      [
+        "Periode",
+        "",
+        `${tanggalMulai || "Semua"} sampai ${tanggalAkhir || "Semua"}`,
+      ],
+      ["Status Transaksi", "", statusFilter],
+      ["Total Transaksi", "", totalTransaksi],
+      ["Total Pendapatan", "", totalPendapatan],
+      [],
+      ["No", "Pelanggan", "Jumlah", "Status", "Tanggal"],
+      ...filteredOrders.map((order, index) => [
+        index + 1,
+        order.customer_name || "-",
+        Number(order.amount || 0),
+        order.status || "-",
+        new Date(order.created_at).toLocaleDateString("id-ID"),
+      ]),
     ];
 
+    const worksheet = XLSX.utils.aoa_to_sheet(data);
+
+    // Menggabungkan judul bisnis dan judul laporan
+    worksheet["!merges"] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } },
+
+      // Menggabungkan label dan nilai ringkasan
+      { s: { r: 3, c: 0 }, e: { r: 3, c: 1 } },
+      { s: { r: 3, c: 2 }, e: { r: 3, c: 4 } },
+
+      { s: { r: 4, c: 0 }, e: { r: 4, c: 1 } },
+      { s: { r: 4, c: 2 }, e: { r: 4, c: 4 } },
+
+      { s: { r: 5, c: 0 }, e: { r: 5, c: 1 } },
+      { s: { r: 5, c: 2 }, e: { r: 5, c: 4 } },
+
+      { s: { r: 6, c: 0 }, e: { r: 6, c: 1 } },
+      { s: { r: 6, c: 2 }, e: { r: 6, c: 4 } },
+    ];
+
+    // Lebar setiap kolom
+    worksheet["!cols"] = [
+      { wch: 18 },
+      { wch: 28 },
+      { wch: 20 },
+      { wch: 18 },
+      { wch: 20 },
+    ];
+
+    // Tinggi baris judul
+    worksheet["!rows"] = [
+      { hpt: 28 },
+      { hpt: 22 },
+    ];
+
+    // Filter otomatis pada tabel
+    const barisTerakhir = 9 + filteredOrders.length;
+
+    worksheet["!autofilter"] = {
+      ref: `A9:E${barisTerakhir}`,
+    };
+
+    // Format total pendapatan menjadi Rupiah
+    if (worksheet["C7"]) {
+      worksheet["C7"].z = '"Rp" #,##0';
+    }
+
+    // Format jumlah setiap transaksi menjadi Rupiah
+    for (let i = 0; i < filteredOrders.length; i++) {
+      const cell = worksheet[`C${10 + i}`];
+
+      if (cell) {
+        cell.z = '"Rp" #,##0';
+      }
+    }
+
+    // Membuat workbook
     const workbook = XLSX.utils.book_new();
+
+    workbook.Props = {
+      Title: "Laporan Penjualan",
+      Subject: `Laporan Penjualan ${namaBisnis}`,
+      Author: namaBisnis,
+      Company: namaBisnis,
+    };
 
     XLSX.utils.book_append_sheet(
       workbook,
@@ -165,48 +313,100 @@ function Reports() {
       "Laporan Penjualan"
     );
 
-    XLSX.writeFile(workbook, "Laporan-Penjualan-MasMuns.xlsx");
+    // Nama file mengikuti bisnis
+    const namaFile = namaBisnis.replace(
+      /[^a-zA-Z0-9-_]/g,
+      "-"
+    );
+
+    XLSX.writeFile(
+      workbook,
+      `Laporan-Penjualan-${namaFile}.xlsx`
+    );
   }
 
-  function exportPDF() {
+  // Export PDF dengan logo dan identitas bisnis
+  async function exportPDF() {
     const doc = new jsPDF();
 
+    // Memuat logo bisnis
+    const logoData = await loadImageAsDataURL(
+      businessProfile.logo_url
+    );
+
+    // Posisi nama bisnis menyesuaikan keberadaan logo
+    let headerX = 14;
+
+    if (logoData) {
+      try {
+        doc.addImage(
+          logoData,
+          "PNG",
+          14,
+          10,
+          18,
+          18
+        );
+
+        headerX = 38;
+      } catch (error) {
+        console.error("Gagal menambahkan logo ke PDF:", error);
+      }
+    }
+
+    // Nama bisnis
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
-    doc.text("MasMuns", 14, 20);
+    doc.text(
+      businessProfile.business_name || "Bisnis Saya",
+      headerX,
+      20
+    );
 
+    // Judul laporan
     doc.setFontSize(12);
-    doc.text("LAPORAN PENJUALAN", 14, 29);
+    doc.text(
+      "LAPORAN PENJUALAN",
+      headerX,
+      29
+    );
 
+    // Informasi laporan
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
 
     doc.text(
       `Periode: ${tanggalMulai || "Semua"} sampai ${tanggalAkhir || "Semua"}`,
       14,
-      38
+      42
     );
 
     doc.text(
       `Status: ${statusFilter}`,
       14,
-      44
+      48
     );
+
+    // Ringkasan
+    doc.setFont("helvetica", "bold");
 
     doc.text(
       `Total Transaksi: ${totalTransaksi}`,
       14,
-      54
+      58
     );
 
     doc.text(
       `Total Pendapatan: ${formatRupiah(totalPendapatan)}`,
       14,
-      60
+      64
     );
 
+    doc.setFont("helvetica", "normal");
+
+    // Tabel laporan
     autoTable(doc, {
-      startY: 68,
+      startY: 72,
       head: [[
         "No",
         "Pelanggan",
@@ -231,7 +431,14 @@ function Reports() {
       theme: "grid",
     });
 
-    doc.save("Laporan-Penjualan-MasMuns.pdf");
+    // Nama file sesuai bisnis
+    const namaFile = (
+      businessProfile.business_name || "Bisnis Saya"
+    ).replace(/[^a-zA-Z0-9-_]/g, "-");
+
+    doc.save(
+      `Laporan-Penjualan-${namaFile}.pdf`
+    );
   }
 
   const inputClass =
@@ -244,7 +451,7 @@ function Reports() {
       </h2>
 
       <p className="mt-1 text-slate-400">
-        Pantau transaksi dan pendapatan bisnis MasMuns.
+        Pantau transaksi dan pendapatan bisnis {businessProfile.business_name}.
       </p>
 
       {error && (
