@@ -31,19 +31,34 @@ function Customers() {
     loadData();
   }, []);
 
+  // Memuat pelanggan dan transaksi milik Admin yang login
   async function loadData() {
     setLoading(true);
     setError("");
 
     try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        throw new Error(
+          "Akun Admin tidak ditemukan. Silakan login kembali."
+        );
+      }
+
       const [customerResult, orderResult] = await Promise.all([
         supabase
           .from("customers")
           .select("*")
+          .eq("user_id", user.id)
           .order("created_at", { ascending: false }),
+
         supabase
           .from("orders")
           .select("*")
+          .eq("user_id", user.id)
           .order("created_at", { ascending: false }),
       ]);
 
@@ -52,8 +67,19 @@ function Customers() {
 
       setCustomers(customerResult.data || []);
       setOrders(orderResult.data || []);
+
+      // Perbarui detail pelanggan yang sedang dibuka
+      if (selectedCustomer) {
+        const updatedCustomer = (customerResult.data || []).find(
+          (customer) => customer.id === selectedCustomer.id
+        );
+
+        setSelectedCustomer(updatedCustomer || null);
+      }
     } catch (err) {
       setError(err.message || "Gagal memuat data.");
+      setCustomers([]);
+      setOrders([]);
     } finally {
       setLoading(false);
     }
@@ -93,6 +119,7 @@ function Customers() {
     setSuccess("");
   }
 
+  // Menambah atau memperbarui pelanggan milik Admin
   async function handleSubmit(e) {
     e.preventDefault();
 
@@ -100,19 +127,31 @@ function Customers() {
     setError("");
     setSuccess("");
 
-    const customerData = {
-      name: form.name.trim(),
-      phone: form.phone.trim() || null,
-      email: form.email.trim() || null,
-      address: form.address.trim() || null,
-    };
-
     try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        throw new Error(
+          "Akun Admin tidak ditemukan. Silakan login kembali."
+        );
+      }
+
+      const customerData = {
+        name: form.name.trim(),
+        phone: form.phone.trim() || null,
+        email: form.email.trim() || null,
+        address: form.address.trim() || null,
+      };
+
       if (editingCustomer) {
         const { data, error } = await supabase
           .from("customers")
           .update(customerData)
           .eq("id", editingCustomer.id)
+          .eq("user_id", user.id)
           .select()
           .single();
 
@@ -132,7 +171,12 @@ function Customers() {
       } else {
         const { data, error } = await supabase
           .from("customers")
-          .insert([customerData])
+          .insert([
+            {
+              ...customerData,
+              user_id: user.id,
+            },
+          ])
           .select()
           .single();
 
@@ -152,6 +196,7 @@ function Customers() {
     }
   }
 
+  // Menghapus pelanggan milik Admin yang login
   async function handleDeleteCustomer(customer) {
     const customerOrders = getCustomerOrders(customer);
 
@@ -173,10 +218,22 @@ function Customers() {
     setSuccess("");
 
     try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        throw new Error(
+          "Akun Admin tidak ditemukan. Silakan login kembali."
+        );
+      }
+
       const { error } = await supabase
         .from("customers")
         .delete()
-        .eq("id", customer.id);
+        .eq("id", customer.id)
+        .eq("user_id", user.id);
 
       if (error) throw error;
 

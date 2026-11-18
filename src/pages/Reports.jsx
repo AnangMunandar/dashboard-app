@@ -39,20 +39,35 @@ function Reports() {
   useEffect(() => {
     async function loadOrders() {
       setLoading(true);
+      setError("");
 
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .order("created_at", { ascending: false });
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
 
-      if (error) {
-        setError("Gagal memuat laporan: " + error.message);
-      } else {
+        if (userError) throw userError;
+
+        if (!user) {
+          throw new Error("Pengguna belum login.");
+        }
+
+        const { data, error } = await supabase
+          .from("orders")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
         setOrders(data || []);
-        setError("");
+      } catch (error) {
+        setError("Gagal memuat laporan: " + error.message);
+        setOrders([]);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     }
 
     loadOrders();

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
@@ -7,6 +8,8 @@ function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -18,6 +21,7 @@ function Register() {
       setError("Password minimal 6 karakter.");
       return;
     }
+
     if (password !== confirm) {
       setError("Konfirmasi password tidak sama.");
       return;
@@ -31,6 +35,7 @@ function Register() {
       setError(error.message);
       return;
     }
+
     navigate("/dashboard");
   }
 
@@ -49,7 +54,9 @@ function Register() {
         )}
 
         <div>
-          <label className="mb-1 block text-sm text-slate-300">Email</label>
+          <label className="mb-1 block text-sm text-slate-300">
+            Email
+          </label>
           <input
             type="email"
             required
@@ -60,27 +67,119 @@ function Register() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm text-slate-300">Password</label>
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded bg-slate-700 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          <label className="mb-1 block text-sm text-slate-300">
+            Password
+          </label>
+
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded bg-slate-700 px-3 py-2 pr-12 text-white outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-white"
+              aria-label={showPassword ? "Sembunyikan password" : "Lihat password"}
+              title={showPassword ? "Sembunyikan password" : "Lihat password"}
+            >
+              {showPassword ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                  <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c5 0 9 5 9 7a11.8 11.8 0 0 1-3.1 3.9" />
+                  <path d="M6.61 6.61C3.98 8.05 2 10.5 2 12c0 2 4 7 10 7a10.7 10.7 0 0 0 4.1-.8" />
+                  <path d="m2 2 20 20" />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
 
         <div>
           <label className="mb-1 block text-sm text-slate-300">
             Konfirmasi Password
           </label>
-          <input
-            type="password"
-            required
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            className="w-full rounded bg-slate-700 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+
+          <div className="relative">
+            <input
+              type={showConfirm ? "text" : "password"}
+              required
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              className="w-full rounded bg-slate-700 px-3 py-2 pr-12 text-white outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+
+            <button
+              type="button"
+              onClick={() => setShowConfirm(!showConfirm)}
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-white"
+              aria-label={showConfirm ? "Sembunyikan password" : "Lihat password"}
+              title={showConfirm ? "Sembunyikan password" : "Lihat password"}
+            >
+              {showConfirm ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                  <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c5 0 9 5 9 7a11.8 11.8 0 0 1-3.1 3.9" />
+                  <path d="M6.61 6.61C3.98 8.05 2 10.5 2 12c0 2 4 7 10 7a10.7 10.7 0 0 0 4.1-.8" />
+                  <path d="m2 2 20 20" />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
 
         <button

@@ -24,12 +24,27 @@ function Products() {
     description: "",
   });
 
+  // Memuat produk milik Admin yang sedang login
   async function loadProducts() {
     setLoading(true);
+    setError("");
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      setError("Gagal mendapatkan akun Admin. Silakan login kembali.");
+      setProducts([]);
+      setLoading(false);
+      return;
+    }
 
     const { data, error } = await supabase
       .from("products")
       .select("*")
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -139,6 +154,7 @@ function Products() {
     });
   }
 
+  // Menambah atau memperbarui produk milik Admin
   async function handleSubmit(e) {
     e.preventDefault();
 
@@ -170,6 +186,17 @@ function Products() {
 
     setSaving(true);
 
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      setError("Akun Admin tidak ditemukan. Silakan login kembali.");
+      setSaving(false);
+      return;
+    }
+
     const productData = {
       name: form.name.trim(),
       category: form.category.trim() || null,
@@ -184,11 +211,17 @@ function Products() {
       result = await supabase
         .from("products")
         .update(productData)
-        .eq("id", editingId);
+        .eq("id", editingId)
+        .eq("user_id", user.id);
     } else {
       result = await supabase
         .from("products")
-        .insert([productData]);
+        .insert([
+          {
+            ...productData,
+            user_id: user.id,
+          },
+        ]);
     }
 
     if (result.error) {
@@ -207,6 +240,7 @@ function Products() {
     setSaving(false);
   }
 
+  // Menghapus hanya produk milik Admin yang login
   async function handleDelete(product) {
     const yakin = window.confirm(
       `Apakah kamu yakin ingin menghapus produk ${product.name}?`
@@ -217,10 +251,21 @@ function Products() {
     setError("");
     setSuccess("");
 
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      setError("Akun Admin tidak ditemukan. Silakan login kembali.");
+      return;
+    }
+
     const { error } = await supabase
       .from("products")
       .delete()
-      .eq("id", product.id);
+      .eq("id", product.id)
+      .eq("user_id", user.id);
 
     if (error) {
       setError("Gagal menghapus produk: " + error.message);

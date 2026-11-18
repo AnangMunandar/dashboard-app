@@ -55,7 +55,7 @@ function exportToExcel(orders) {
   XLSX.writeFile(workbook, "Laporan-Pesanan.xlsx");
 }
 
-// Export laporan pesanan ke PDF dengan desain profesional
+// Export laporan pesanan ke PDF
 function exportToPDF(orders, periode) {
   const doc = new jsPDF();
   const lebarHalaman = doc.internal.pageSize.getWidth();
@@ -258,6 +258,7 @@ function Dashboard() {
 
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+
   const [expenses, setExpenses] = useState([]);
   const [loadingExpenses, setLoadingExpenses] = useState(true);
 
@@ -268,9 +269,18 @@ function Dashboard() {
 
   // Mengambil data pesanan
   const loadOrders = useCallback(async () => {
+    if (!user?.id) {
+      setOrders([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+
     const { data, error } = await supabase
       .from("orders")
       .select("*")
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -281,13 +291,22 @@ function Dashboard() {
     }
 
     setLoading(false);
-  }, []);
+  }, [user?.id]);
 
   // Mengambil data produk
   const loadProducts = useCallback(async () => {
+    if (!user?.id) {
+      setProducts([]);
+      setLoadingProducts(false);
+      return;
+    }
+
+    setLoadingProducts(true);
+
     const { data, error } = await supabase
       .from("products")
-      .select("*");
+      .select("*")
+      .eq("user_id", user.id);
 
     if (error) {
       setError("Gagal memuat produk: " + error.message);
@@ -296,14 +315,17 @@ function Dashboard() {
     }
 
     setLoadingProducts(false);
-  }, []);
-    // Mengambil data pengeluaran
+  }, [user?.id]);
+
+  // Mengambil data pengeluaran
   const loadExpenses = useCallback(async () => {
     if (!user?.id) {
       setExpenses([]);
       setLoadingExpenses(false);
       return;
     }
+
+    setLoadingExpenses(true);
 
     const { data, error } = await supabase
       .from("expenses")
@@ -319,8 +341,8 @@ function Dashboard() {
     setLoadingExpenses(false);
   }, [user?.id]);
 
-  // Memuat pesanan dan produk otomatis
-   useEffect(() => {
+  // Memuat pesanan, produk, dan pengeluaran otomatis
+  useEffect(() => {
     loadOrders();
     loadProducts();
     loadExpenses();
@@ -328,13 +350,19 @@ function Dashboard() {
 
   // Mengubah status pesanan
   async function handleToggleStatus(order) {
+    if (!user?.id) {
+      setError("Silakan login kembali.");
+      return;
+    }
+
     const statusBaru =
       order.status === "selesai" ? "pending" : "selesai";
 
     const { error } = await supabase
       .from("orders")
       .update({ status: statusBaru })
-      .eq("id", order.id);
+      .eq("id", order.id)
+      .eq("user_id", user.id);
 
     if (error) {
       setError("Gagal mengubah status: " + error.message);
@@ -346,6 +374,11 @@ function Dashboard() {
 
   // Menghapus pesanan
   async function handleDelete(order) {
+    if (!user?.id) {
+      setError("Silakan login kembali.");
+      return;
+    }
+
     const yakin = window.confirm(
       `Hapus pesanan atas nama ${order.customer_name}?`
     );
@@ -355,7 +388,8 @@ function Dashboard() {
     const { error } = await supabase
       .from("orders")
       .delete()
-      .eq("id", order.id);
+      .eq("id", order.id)
+      .eq("user_id", user.id);
 
     if (error) {
       setError("Gagal menghapus: " + error.message);
@@ -369,11 +403,12 @@ function Dashboard() {
   const total = orders.length;
 
   const selesai = orders.filter(
-    (o) => o.status === "selesai"
+    (order) => order.status === "selesai"
   ).length;
 
   const pendapatan = orders.reduce(
-    (jumlah, o) => jumlah + Number(o.amount || 0),
+    (jumlah, order) =>
+      jumlah + Number(order.amount || 0),
     0
   );
 
@@ -475,6 +510,7 @@ function Dashboard() {
 
   // Statistik produk
   const totalProduk = products.length;
+
   const totalStok = products.reduce(
     (jumlah, product) =>
       jumlah + Number(product.stock || 0),
@@ -488,30 +524,34 @@ function Dashboard() {
         Number(product.stock || 0),
     0
   );
+
   // Ringkasan keuangan
-const pendapatanSelesai = orders
-  .filter((order) => order.status === "selesai")
-  .reduce(
-    (total, order) => total + Number(order.amount || 0),
+  const pendapatanSelesai = orders
+    .filter((order) => order.status === "selesai")
+    .reduce(
+      (total, order) =>
+        total + Number(order.amount || 0),
+      0
+    );
+
+  const totalPengeluaran = expenses.reduce(
+    (total, expense) =>
+      total + Number(expense.amount || 0),
     0
   );
 
-const totalPengeluaran = expenses.reduce(
-  (total, expense) => total + Number(expense.amount || 0),
-  0
-);
-
-const labaBersih = pendapatanSelesai - totalPengeluaran;
+  const labaBersih =
+    pendapatanSelesai - totalPengeluaran;
 
   // Filter daftar pesanan
-  const filteredOrders = orders.filter((o) => {
-    const cocokNama = (o.customer_name || "")
+  const filteredOrders = orders.filter((order) => {
+    const cocokNama = (order.customer_name || "")
       .toLowerCase()
       .includes(search.trim().toLowerCase());
 
     const cocokStatus =
       statusFilter === "semua" ||
-      o.status === statusFilter;
+      order.status === statusFilter;
 
     return cocokNama && cocokStatus;
   });
@@ -554,42 +594,43 @@ const labaBersih = pendapatanSelesai - totalPengeluaran;
           note="Jumlah semua pesanan"
         />
       </div>
+
       {/* Ringkasan Keuangan */}
-<h3 className="mb-3 mt-8 text-lg font-semibold text-white">
-  Ringkasan Keuangan
-</h3>
+      <h3 className="mb-3 mt-8 text-lg font-semibold text-white">
+        Ringkasan Keuangan
+      </h3>
 
-<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
-  <StatCard
-    title="Pendapatan Selesai"
-    value={
-      loading
-        ? "..."
-        : formatRupiah(pendapatanSelesai)
-    }
-    note="Pesanan berstatus selesai"
-  />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+        <StatCard
+          title="Pendapatan Selesai"
+          value={
+            loading
+              ? "..."
+              : formatRupiah(pendapatanSelesai)
+          }
+          note="Pesanan berstatus selesai"
+        />
 
-  <StatCard
-    title="Total Pengeluaran"
-    value={
-      loadingExpenses
-        ? "..."
-        : formatRupiah(totalPengeluaran)
-    }
-    note="Seluruh pengeluaran tercatat"
-  />
+        <StatCard
+          title="Total Pengeluaran"
+          value={
+            loadingExpenses
+              ? "..."
+              : formatRupiah(totalPengeluaran)
+          }
+          note="Seluruh pengeluaran tercatat"
+        />
 
-  <StatCard
-    title="Laba Bersih"
-    value={
-      loading || loadingExpenses
-        ? "..."
-        : formatRupiah(labaBersih)
-    }
-    note="Pendapatan selesai dikurangi pengeluaran"
-  />
-</div>
+        <StatCard
+          title="Laba Bersih"
+          value={
+            loading || loadingExpenses
+              ? "..."
+              : formatRupiah(labaBersih)
+          }
+          note="Pendapatan selesai dikurangi pengeluaran"
+        />
+      </div>
 
       {/* Statistik Produk */}
       <h3 className="mb-3 mt-8 text-lg font-semibold text-white">
@@ -647,15 +688,21 @@ const labaBersih = pendapatanSelesai - totalPengeluaran;
 
             <button
               onClick={() => exportToExcel(filteredChartOrders)}
-              disabled={loading || filteredChartOrders.length === 0}
+              disabled={
+                loading || filteredChartOrders.length === 0
+              }
               className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Export Excel
             </button>
 
             <button
-              onClick={() => exportToPDF(filteredChartOrders, periode)}
-              disabled={loading || filteredChartOrders.length === 0}
+              onClick={() =>
+                exportToPDF(filteredChartOrders, periode)
+              }
+              disabled={
+                loading || filteredChartOrders.length === 0
+              }
               className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Export PDF
