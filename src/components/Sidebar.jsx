@@ -6,6 +6,7 @@ const menu = [
   { to: "/products", label: "Produk" },
   { to: "/customers", label: "Pelanggan" },
   { to: "/reports", label: "Laporan" },
+  { to: "/expenses", label: "Pengeluaran" },
 ];
 
 function Sidebar() {

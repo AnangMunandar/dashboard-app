@@ -258,6 +258,8 @@ function Dashboard() {
 
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [expenses, setExpenses] = useState([]);
+  const [loadingExpenses, setLoadingExpenses] = useState(true);
 
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
@@ -295,12 +297,34 @@ function Dashboard() {
 
     setLoadingProducts(false);
   }, []);
+    // Mengambil data pengeluaran
+  const loadExpenses = useCallback(async () => {
+    if (!user?.id) {
+      setExpenses([]);
+      setLoadingExpenses(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("expenses")
+      .select("*")
+      .eq("user_id", user.id);
+
+    if (error) {
+      setError("Gagal memuat pengeluaran: " + error.message);
+    } else {
+      setExpenses(data || []);
+    }
+
+    setLoadingExpenses(false);
+  }, [user?.id]);
 
   // Memuat pesanan dan produk otomatis
-  useEffect(() => {
+   useEffect(() => {
     loadOrders();
     loadProducts();
-  }, [loadOrders, loadProducts]);
+    loadExpenses();
+  }, [loadOrders, loadProducts, loadExpenses]);
 
   // Mengubah status pesanan
   async function handleToggleStatus(order) {
@@ -451,7 +475,6 @@ function Dashboard() {
 
   // Statistik produk
   const totalProduk = products.length;
-
   const totalStok = products.reduce(
     (jumlah, product) =>
       jumlah + Number(product.stock || 0),
@@ -465,6 +488,20 @@ function Dashboard() {
         Number(product.stock || 0),
     0
   );
+  // Ringkasan keuangan
+const pendapatanSelesai = orders
+  .filter((order) => order.status === "selesai")
+  .reduce(
+    (total, order) => total + Number(order.amount || 0),
+    0
+  );
+
+const totalPengeluaran = expenses.reduce(
+  (total, expense) => total + Number(expense.amount || 0),
+  0
+);
+
+const labaBersih = pendapatanSelesai - totalPengeluaran;
 
   // Filter daftar pesanan
   const filteredOrders = orders.filter((o) => {
@@ -517,6 +554,42 @@ function Dashboard() {
           note="Jumlah semua pesanan"
         />
       </div>
+      {/* Ringkasan Keuangan */}
+<h3 className="mb-3 mt-8 text-lg font-semibold text-white">
+  Ringkasan Keuangan
+</h3>
+
+<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+  <StatCard
+    title="Pendapatan Selesai"
+    value={
+      loading
+        ? "..."
+        : formatRupiah(pendapatanSelesai)
+    }
+    note="Pesanan berstatus selesai"
+  />
+
+  <StatCard
+    title="Total Pengeluaran"
+    value={
+      loadingExpenses
+        ? "..."
+        : formatRupiah(totalPengeluaran)
+    }
+    note="Seluruh pengeluaran tercatat"
+  />
+
+  <StatCard
+    title="Laba Bersih"
+    value={
+      loading || loadingExpenses
+        ? "..."
+        : formatRupiah(labaBersih)
+    }
+    note="Pendapatan selesai dikurangi pengeluaran"
+  />
+</div>
 
       {/* Statistik Produk */}
       <h3 className="mb-3 mt-8 text-lg font-semibold text-white">
