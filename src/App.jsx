@@ -6,6 +6,9 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
 import Customers from "./pages/Customers";
+import Orders from "./pages/Orders";
+import StockHistory from "./pages/StockHistory";
+import StockAdjustment from "./pages/StockAdjustment";
 import Reports from "./pages/Reports";
 import Expenses from "./pages/Expenses";
 import Profile from "./pages/Profile";
@@ -63,6 +66,33 @@ function App() {
         element={
           <ProtectedRoute>
             <Customers />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/orders"
+        element={
+          <ProtectedRoute>
+            <Orders />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/stock-history"
+        element={
+          <ProtectedRoute>
+            <StockHistory />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/stock-adjustment"
+        element={
+          <ProtectedRoute>
+            <StockAdjustment />
           </ProtectedRoute>
         }
       />

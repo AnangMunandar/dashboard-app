@@ -7,11 +7,13 @@ const menu = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/products", label: "Produk" },
   { to: "/customers", label: "Pelanggan" },
+  { to: "/orders", label: "Pesanan" },
+  { to: "/stock-history", label: "Riwayat Stok" },
   { to: "/reports", label: "Laporan" },
   { to: "/expenses", label: "Pengeluaran" },
   { to: "/profile", label: "Profil Bisnis" },
+  { to: "/stock-adjustment", label: "Penyesuaian Stok" },
 ];
-
 function Sidebar() {
   const [profile, setProfile] = useState({
     business_name: "MasMuns",
