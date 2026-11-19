@@ -69,10 +69,21 @@ function exportToPDF(orders, periode) {
 
   const totalPesanan = orders.length;
 
-  const totalPendapatan = orders.reduce(
+  // Total pendapatan hanya menghitung pesanan selesai
+const totalPendapatan = orders
+  .filter((order) => order.status === "selesai")
+  .reduce(
     (total, order) => total + Number(order.amount || 0),
     0
   );
+
+ console.log("DEBUG PDF:", {
+  pesanan: orders.map((order) => ({
+    status: order.status,
+    jumlah: order.amount,
+  })),
+  totalPendapatan,
+});
 
   // HEADER LAPORAN
   doc.setFillColor(15, 23, 42);
