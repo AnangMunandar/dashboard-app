@@ -348,57 +348,65 @@ function Dashboard() {
     loadExpenses();
   }, [loadOrders, loadProducts, loadExpenses]);
 
-  // Mengubah status pesanan
-  async function handleToggleStatus(order) {
-    if (!user?.id) {
-      setError("Silakan login kembali.");
-      return;
-    }
-
-    const statusBaru =
-      order.status === "selesai" ? "pending" : "selesai";
-
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: statusBaru })
-      .eq("id", order.id)
-      .eq("user_id", user.id);
-
-    if (error) {
-      setError("Gagal mengubah status: " + error.message);
-      return;
-    }
-
-    loadOrders();
+  // Mengubah status pesanan sekaligus mengatur stok
+async function handleToggleStatus(order) {
+  if (!user?.id) {
+    setError("Silakan login kembali.");
+    return;
   }
 
-  // Menghapus pesanan
-  async function handleDelete(order) {
-    if (!user?.id) {
-      setError("Silakan login kembali.");
-      return;
-    }
+  const statusBaru =
+    order.status === "selesai" ? "pending" : "selesai";
 
-    const yakin = window.confirm(
-      `Hapus pesanan atas nama ${order.customer_name}?`
-    );
+  const { error } = await supabase.rpc("set_order_status", {
+    p_order_id: order.id,
+    p_new_status: statusBaru,
+  });
 
-    if (!yakin) return;
-
-    const { error } = await supabase
-      .from("orders")
-      .delete()
-      .eq("id", order.id)
-      .eq("user_id", user.id);
-
-    if (error) {
-      setError("Gagal menghapus: " + error.message);
-      return;
-    }
-
-    loadOrders();
+  if (error) {
+    setError("Gagal mengubah status: " + error.message);
+    return;
   }
 
+  setError("");
+
+  await Promise.all([
+    loadOrders(),
+    loadProducts(),
+  ]);
+}
+  // Menghapus pesanan sekaligus mengatur stok
+async function handleDelete(order) {
+  if (!user?.id) {
+    setError("Silakan login kembali.");
+    return;
+  }
+
+  const yakin = window.confirm(
+    `Hapus pesanan atas nama ${order.customer_name}?`
+  );
+
+  if (!yakin) return;
+
+  const { error } = await supabase.rpc(
+    "delete_order_with_stock",
+    {
+      p_order_id: order.id,
+    }
+  );
+
+  if (error) {
+    setError("Gagal menghapus pesanan: " + error.message);
+    return;
+  }
+
+  setError("");
+
+  await Promise.all([
+    loadOrders(),
+    loadProducts(),
+  ]);
+}
   // Statistik pesanan
   const total = orders.length;
 
@@ -885,7 +893,14 @@ function Dashboard() {
 
       {/* Form Pesanan */}
       <div className="mt-8">
-        <OrderForm onAdded={loadOrders} />
+        <OrderForm
+  onAdded={async () => {
+    await Promise.all([
+      loadOrders(),
+      loadProducts(),
+    ]);
+  }}
+/>
       </div>
 
       {/* Daftar Pesanan */}
