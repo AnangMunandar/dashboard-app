@@ -165,10 +165,13 @@ function Reports() {
   // Ringkasan transaksi
   const totalTransaksi = filteredOrders.length;
 
-  const totalPendapatan = filteredOrders.reduce(
-    (total, order) => total + Number(order.amount || 0),
-    0
-  );
+  // Pendapatan hanya berasal dari transaksi selesai
+  const totalPendapatan = filteredOrders
+    .filter((order) => order.status === "selesai")
+    .reduce(
+      (total, order) => total + Number(order.amount || 0),
+      0
+    );
 
   const transaksiSelesai = filteredOrders.filter(
     (order) => order.status === "selesai"
@@ -178,29 +181,31 @@ function Reports() {
     (order) => order.status === "pending"
   ).length;
 
-  // Data grafik
+  // Data grafik: hanya menghitung transaksi selesai
   const chartData = useMemo(() => {
     const grouped = {};
 
-    filteredOrders.forEach((order) => {
-      const tanggal = tanggalLokal(order.created_at);
+    filteredOrders
+      .filter((order) => order.status === "selesai")
+      .forEach((order) => {
+        const tanggal = tanggalLokal(order.created_at);
 
-      if (!grouped[tanggal]) {
-        grouped[tanggal] = {
-          tanggal: new Date(
-            `${tanggal}T00:00:00`
-          ).toLocaleDateString("id-ID", {
-            day: "2-digit",
-            month: "short",
-          }),
-          pendapatan: 0,
-        };
-      }
+        if (!grouped[tanggal]) {
+          grouped[tanggal] = {
+            tanggal: new Date(
+              `${tanggal}T00:00:00`
+            ).toLocaleDateString("id-ID", {
+              day: "2-digit",
+              month: "short",
+            }),
+            pendapatan: 0,
+          };
+        }
 
-      grouped[tanggal].pendapatan += Number(
-        order.amount || 0
-      );
-    });
+        grouped[tanggal].pendapatan += Number(
+          order.amount || 0
+        );
+      });
 
     return Object.values(grouped).reverse();
   }, [filteredOrders]);
@@ -404,7 +409,7 @@ function Reports() {
 
     doc.setFont("helvetica", "normal");
 
-    // Tabel laporan
+    // Tabel laporan tetap menampilkan semua transaksi sesuai filter
     autoTable(doc, {
       startY: 72,
       head: [[
@@ -563,7 +568,7 @@ function Reports() {
         </h3>
 
         <p className="mb-5 mt-1 text-sm text-slate-400">
-          Pendapatan berdasarkan tanggal transaksi.
+          Pendapatan berdasarkan tanggal transaksi selesai.
         </p>
 
         {loading ? (
@@ -572,7 +577,7 @@ function Reports() {
           </p>
         ) : chartData.length === 0 ? (
           <p className="py-12 text-center text-slate-400">
-            Tidak ada data pada filter yang dipilih.
+            Tidak ada data transaksi selesai pada filter yang dipilih.
           </p>
         ) : (
           <div className="h-72 w-full">
