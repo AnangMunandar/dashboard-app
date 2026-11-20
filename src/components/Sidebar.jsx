@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 
@@ -15,12 +15,50 @@ const menu = [
   { to: "/stock-adjustment", label: "Penyesuaian Stok" },
 ];
 
+const SCROLL_STORAGE_KEY = "masmuns-sidebar-scroll";
+
 function Sidebar() {
   const [profile, setProfile] = useState({
     business_name: "MasMuns",
     logo_url: "",
   });
 
+  const navRef = useRef(null);
+
+  // Mengembalikan posisi menu ketika Sidebar dipasang kembali.
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+
+    if (!nav) return;
+
+    const savedPosition = sessionStorage.getItem(SCROLL_STORAGE_KEY);
+
+    if (savedPosition !== null) {
+      nav.scrollLeft = Number(savedPosition);
+    }
+  }, []);
+
+  // Menyimpan posisi setiap kali menu digeser.
+  function handleNavScroll(event) {
+    sessionStorage.setItem(
+      SCROLL_STORAGE_KEY,
+      String(event.currentTarget.scrollLeft)
+    );
+  }
+
+  // Menyimpan posisi tepat sebelum berpindah halaman.
+  function handleMenuClick() {
+    const nav = navRef.current;
+
+    if (nav) {
+      sessionStorage.setItem(
+        SCROLL_STORAGE_KEY,
+        String(nav.scrollLeft)
+      );
+    }
+  }
+
+  // Memuat profil bisnis.
   useEffect(() => {
     async function loadBusinessProfile() {
       const {
@@ -74,7 +112,12 @@ function Sidebar() {
       </div>
 
       {/* NAVIGATION */}
-      <nav className="flex gap-2 overflow-x-auto px-3 py-4 md:flex-1 md:flex-col md:gap-1.5 md:overflow-x-hidden md:overflow-y-auto md:px-4 md:py-6">
+      <nav
+        ref={navRef}
+        onScroll={handleNavScroll}
+        className="flex gap-2 overflow-x-auto px-3 py-4 md:flex-1 md:flex-col md:gap-1.5 md:overflow-x-hidden md:overflow-y-auto md:px-4 md:py-6"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
         <p className="hidden px-3 pb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8C8170] md:block">
           Main Menu
         </p>
@@ -83,6 +126,7 @@ function Sidebar() {
           <NavLink
             key={item.to}
             to={item.to}
+            onClick={handleMenuClick}
             className={({ isActive }) =>
               `whitespace-nowrap rounded-lg border px-4 py-2.5 text-sm font-medium transition-all duration-200 md:w-full ${
                 isActive
@@ -99,9 +143,7 @@ function Sidebar() {
       {/* SIDEBAR FOOTER */}
       <div className="hidden px-6 pb-6 md:block">
         <div className="border-t border-[#C9A96E]/15 pt-5">
-          <p className="text-xs text-[#8C8170]">
-            Powered by
-          </p>
+          <p className="text-xs text-[#8C8170]">Powered by</p>
 
           <p className="mt-1 text-sm font-semibold tracking-wider text-[#C9A96E]">
             MASMUNS
