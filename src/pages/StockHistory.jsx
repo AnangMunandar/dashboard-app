@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { supabase } from "../lib/supabaseClient";
 
@@ -12,6 +12,8 @@ const sourceLabels = {
 
 const inputClass =
   "w-full min-w-0 rounded-lg border border-[#C9A96E]/25 bg-[#171717] px-4 py-3 text-sm text-[#F5F1E8] outline-none transition placeholder:text-[#817765] focus:border-[#C9A96E] focus:ring-1 focus:ring-[#C9A96E]/30";
+
+const SCROLL_STORAGE_KEY = "masmuns-stock-history-table-scroll";
 
 function formatDate(date) {
   return new Date(date).toLocaleString("id-ID", {
@@ -30,9 +32,7 @@ function StockHistory() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("semua");
 
-  useEffect(() => {
-    loadMovements();
-  }, []);
+  const tableScrollRef = useRef(null);
 
   async function loadMovements() {
     setLoading(true);
@@ -64,6 +64,10 @@ function StockHistory() {
     setLoading(false);
   }
 
+  useEffect(() => {
+    loadMovements();
+  }, []);
+
   const filteredMovements = movements.filter((item) => {
     const matchesSearch =
       (item.product_name || "")
@@ -78,6 +82,26 @@ function StockHistory() {
 
     return matchesSearch && matchesFilter;
   });
+
+  // Pulihkan posisi tabel setelah tabel selesai dirender.
+  useLayoutEffect(() => {
+    if (loading || error || filteredMovements.length === 0) return;
+
+    const tableContainer = tableScrollRef.current;
+    const savedPosition = sessionStorage.getItem(SCROLL_STORAGE_KEY);
+
+    if (tableContainer && savedPosition !== null) {
+      tableContainer.scrollLeft = Number(savedPosition);
+    }
+  }, [loading, error, filteredMovements.length]);
+
+  // Simpan posisi setiap kali tabel digeser.
+  function handleTableScroll(event) {
+    sessionStorage.setItem(
+      SCROLL_STORAGE_KEY,
+      String(event.currentTarget.scrollLeft)
+    );
+  }
 
   const totalMasuk = movements
     .filter((item) => item.movement_type === "masuk")
@@ -133,24 +157,20 @@ function StockHistory() {
               <div className="absolute left-0 top-0 h-full w-1 bg-[#C9A96E]/70" />
 
               <div className="pl-2">
-                <p className="text-sm text-[#A79B86]">
-                  {item.title}
-                </p>
+                <p className="text-sm text-[#A79B86]">{item.title}</p>
 
                 <h2 className="mt-2 break-words text-2xl font-bold text-[#F5F1E8]">
                   {item.value}
                 </h2>
 
-                <p className="mt-1 text-xs text-[#8C8170]">
-                  {item.note}
-                </p>
+                <p className="mt-1 text-xs text-[#8C8170]">{item.note}</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* DAFTAR RIWAYAT */}
-        <div className="rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-4 shadow-lg sm:p-5">
+        <div className="min-w-0 rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-4 shadow-lg sm:p-5">
           <div className="mb-5 flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-[#C9A96E]">
@@ -214,7 +234,12 @@ function StockHistory() {
               Belum ada riwayat stok yang ditemukan.
             </p>
           ) : !error ? (
-            <div className="overflow-x-auto rounded-xl border border-[#C9A96E]/15">
+            <div
+              ref={tableScrollRef}
+              onScroll={handleTableScroll}
+              className="w-full max-w-full overflow-x-auto overscroll-x-contain rounded-xl border border-[#C9A96E]/15"
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
               <table className="w-full min-w-[850px] text-left text-sm">
                 <thead className="bg-[#181818] text-xs uppercase tracking-wider text-[#C9A96E]">
                   <tr className="border-b border-[#C9A96E]/15">
@@ -251,9 +276,7 @@ function StockHistory() {
                               : "border-red-500/20 bg-red-500/10 text-red-400"
                           }`}
                         >
-                          {item.movement_type === "masuk"
-                            ? "Masuk"
-                            : "Keluar"}
+                          {item.movement_type === "masuk" ? "Masuk" : "Keluar"}
                         </span>
                       </td>
 
