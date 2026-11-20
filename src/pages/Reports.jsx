@@ -217,7 +217,7 @@ function Reports() {
     setStatusFilter("semua");
   }
 
-  // Export Excel dengan format profesional
+  // Export Excel
   function exportExcel() {
     const namaBisnis =
       businessProfile.business_name || "Bisnis Saya";
@@ -247,26 +247,19 @@ function Reports() {
 
     const worksheet = XLSX.utils.aoa_to_sheet(data);
 
-    // Menggabungkan judul bisnis dan judul laporan
     worksheet["!merges"] = [
       { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
       { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } },
-
-      // Menggabungkan label dan nilai ringkasan
       { s: { r: 3, c: 0 }, e: { r: 3, c: 1 } },
       { s: { r: 3, c: 2 }, e: { r: 3, c: 4 } },
-
       { s: { r: 4, c: 0 }, e: { r: 4, c: 1 } },
       { s: { r: 4, c: 2 }, e: { r: 4, c: 4 } },
-
       { s: { r: 5, c: 0 }, e: { r: 5, c: 1 } },
       { s: { r: 5, c: 2 }, e: { r: 5, c: 4 } },
-
       { s: { r: 6, c: 0 }, e: { r: 6, c: 1 } },
       { s: { r: 6, c: 2 }, e: { r: 6, c: 4 } },
     ];
 
-    // Lebar setiap kolom
     worksheet["!cols"] = [
       { wch: 18 },
       { wch: 28 },
@@ -275,25 +268,21 @@ function Reports() {
       { wch: 20 },
     ];
 
-    // Tinggi baris judul
     worksheet["!rows"] = [
       { hpt: 28 },
       { hpt: 22 },
     ];
 
-    // Filter otomatis pada tabel
     const barisTerakhir = 9 + filteredOrders.length;
 
     worksheet["!autofilter"] = {
       ref: `A9:E${barisTerakhir}`,
     };
 
-    // Format total pendapatan menjadi Rupiah
     if (worksheet["C7"]) {
       worksheet["C7"].z = '"Rp" #,##0';
     }
 
-    // Format jumlah setiap transaksi menjadi Rupiah
     for (let i = 0; i < filteredOrders.length; i++) {
       const cell = worksheet[`C${10 + i}`];
 
@@ -302,7 +291,6 @@ function Reports() {
       }
     }
 
-    // Membuat workbook
     const workbook = XLSX.utils.book_new();
 
     workbook.Props = {
@@ -318,7 +306,6 @@ function Reports() {
       "Laporan Penjualan"
     );
 
-    // Nama file mengikuti bisnis
     const namaFile = namaBisnis.replace(
       /[^a-zA-Z0-9-_]/g,
       "-"
@@ -334,12 +321,10 @@ function Reports() {
   async function exportPDF() {
     const doc = new jsPDF();
 
-    // Memuat logo bisnis
     const logoData = await loadImageAsDataURL(
       businessProfile.logo_url
     );
 
-    // Posisi nama bisnis menyesuaikan keberadaan logo
     let headerX = 14;
 
     if (logoData) {
@@ -359,7 +344,8 @@ function Reports() {
       }
     }
 
-    // Nama bisnis
+    // Identitas bisnis
+    doc.setTextColor(201, 169, 110);
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
     doc.text(
@@ -369,14 +355,12 @@ function Reports() {
     );
 
     // Judul laporan
+    doc.setTextColor(40, 40, 40);
     doc.setFontSize(12);
-    doc.text(
-      "LAPORAN PENJUALAN",
-      headerX,
-      29
-    );
+    doc.text("LAPORAN PENJUALAN", headerX, 29);
 
     // Informasi laporan
+    doc.setTextColor(90, 90, 90);
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
 
@@ -393,6 +377,7 @@ function Reports() {
     );
 
     // Ringkasan
+    doc.setTextColor(30, 30, 30);
     doc.setFont("helvetica", "bold");
 
     doc.text(
@@ -409,7 +394,7 @@ function Reports() {
 
     doc.setFont("helvetica", "normal");
 
-    // Tabel laporan tetap menampilkan semua transaksi sesuai filter
+    // Tabel laporan
     autoTable(doc, {
       startY: 72,
       head: [[
@@ -427,16 +412,24 @@ function Reports() {
         new Date(order.created_at).toLocaleDateString("id-ID"),
       ]),
       styles: {
+        font: "helvetica",
         fontSize: 8,
         cellPadding: 3,
+        textColor: [55, 55, 55],
+        lineColor: [220, 210, 190],
+        lineWidth: 0.1,
       },
       headStyles: {
-        fillColor: [30, 41, 59],
+        fillColor: [201, 169, 110],
+        textColor: [17, 17, 17],
+        fontStyle: "bold",
+      },
+      alternateRowStyles: {
+        fillColor: [248, 245, 238],
       },
       theme: "grid",
     });
 
-    // Nama file sesuai bisnis
     const namaFile = (
       businessProfile.business_name || "Bisnis Saya"
     ).replace(/[^a-zA-Z0-9-_]/g, "-");
@@ -447,33 +440,81 @@ function Reports() {
   }
 
   const inputClass =
-    "w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-sky-500";
+    "w-full rounded-lg border border-[#C9A96E]/25 bg-[#171717] px-3 py-2.5 text-sm text-[#F5F1E8] outline-none transition placeholder:text-[#756D60] focus:border-[#C9A96E] focus:ring-1 focus:ring-[#C9A96E]/30";
+
+  const summaryItems = [
+    {
+      title: "Total Transaksi",
+      value: totalTransaksi,
+      description: "Seluruh transaksi sesuai filter",
+    },
+    {
+      title: "Total Pendapatan",
+      value: formatRupiah(totalPendapatan),
+      description: "Hanya transaksi selesai",
+    },
+    {
+      title: "Transaksi Selesai",
+      value: transaksiSelesai,
+      description: "Transaksi berhasil",
+    },
+    {
+      title: "Transaksi Pending",
+      value: transaksiPending,
+      description: "Menunggu penyelesaian",
+    },
+  ];
 
   return (
     <DashboardLayout>
-      <h2 className="text-2xl font-bold text-white">
-        Laporan Penjualan
-      </h2>
+      {/* Header halaman */}
+      <div className="mb-7">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="h-px w-8 bg-[#C9A96E]" />
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#C9A96E]">
+            Business Analytics
+          </p>
+        </div>
 
-      <p className="mt-1 text-slate-400">
-        Pantau transaksi dan pendapatan bisnis {businessProfile.business_name}.
-      </p>
+        <h2 className="mt-3 text-2xl font-bold tracking-wide text-[#F5F1E8] sm:text-3xl">
+          Laporan Penjualan
+        </h2>
+
+        <p className="mt-2 text-sm text-[#A79B86]">
+          Pantau transaksi dan pendapatan bisnis{" "}
+          <span className="font-semibold text-[#C9A96E]">
+            {businessProfile.business_name}
+          </span>
+          .
+        </p>
+      </div>
 
       {error && (
-        <p className="mt-4 rounded-lg bg-red-500/10 p-3 text-sm text-red-400">
+        <p className="mb-5 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
           {error}
         </p>
       )}
 
       {/* Filter laporan */}
-      <div className="mt-6 rounded-xl border border-slate-800 bg-slate-950 p-4">
-        <h3 className="mb-4 font-semibold text-white">
-          Filter Laporan
-        </h3>
+      <div className="rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-4 shadow-lg sm:p-5">
+        <div className="mb-5 flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#C9A96E]/30 bg-[#C9A96E]/10 text-[#C9A96E]">
+            <span className="text-lg">⌕</span>
+          </div>
+
+          <div>
+            <h3 className="font-semibold text-[#F5F1E8]">
+              Filter Laporan
+            </h3>
+            <p className="mt-0.5 text-xs text-[#8C8170]">
+              Atur periode dan status transaksi
+            </p>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <label className="mb-2 block text-sm text-slate-400">
+            <label className="mb-2 block text-xs font-medium tracking-wide text-[#B5AA98]">
               Tanggal Mulai
             </label>
             <input
@@ -485,7 +526,7 @@ function Reports() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm text-slate-400">
+            <label className="mb-2 block text-xs font-medium tracking-wide text-[#B5AA98]">
               Tanggal Akhir
             </label>
             <input
@@ -498,7 +539,7 @@ function Reports() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm text-slate-400">
+            <label className="mb-2 block text-xs font-medium tracking-wide text-[#B5AA98]">
               Status Transaksi
             </label>
             <select
@@ -515,86 +556,98 @@ function Reports() {
           <div className="flex items-end">
             <button
               onClick={resetFilter}
-              className="w-full rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+              className="w-full rounded-lg border border-[#C9A96E]/40 bg-[#C9A96E]/10 px-4 py-2.5 text-sm font-semibold text-[#D9BB83] transition duration-200 hover:bg-[#C9A96E] hover:text-[#111111]"
             >
               Reset Filter
             </button>
           </div>
         </div>
 
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-4 text-xs text-[#8C8170]">
           Kosongkan tanggal untuk menampilkan semua data.
         </p>
       </div>
 
       {/* Ringkasan */}
-      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          {
-            title: "Total Transaksi",
-            value: totalTransaksi,
-          },
-          {
-            title: "Total Pendapatan",
-            value: formatRupiah(totalPendapatan),
-          },
-          {
-            title: "Transaksi Selesai",
-            value: transaksiSelesai,
-          },
-          {
-            title: "Transaksi Pending",
-            value: transaksiPending,
-          },
-        ].map((item) => (
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {summaryItems.map((item, index) => (
           <div
             key={item.title}
-            className="rounded-xl border border-slate-800 bg-slate-950 p-4"
+            className="group relative overflow-hidden rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-5 shadow-lg transition duration-300 hover:border-[#C9A96E]/50"
           >
-            <p className="text-sm text-slate-400">
-              {item.title}
-            </p>
-            <p className="mt-2 break-words text-xl font-bold text-white">
-              {loading ? "..." : item.value}
-            </p>
+            <div className="absolute left-0 top-0 h-full w-1 bg-[#C9A96E]/70" />
+
+            <div className="pl-2">
+              <p className="text-xs font-medium tracking-wide text-[#B5AA98]">
+                {item.title}
+              </p>
+
+              <p className="mt-3 break-words text-xl font-bold tracking-tight text-[#F5F1E8] sm:text-2xl">
+                {loading ? "..." : item.value}
+              </p>
+
+              <p className="mt-2 text-[11px] text-[#8C8170]">
+                {item.description}
+              </p>
+            </div>
+
+            <div className="pointer-events-none absolute -bottom-8 -right-8 h-24 w-24 rounded-full border border-[#C9A96E]/10" />
           </div>
         ))}
       </div>
 
       {/* Grafik */}
-      <div className="mt-8 rounded-xl border border-slate-800 bg-slate-950 p-5">
-        <h3 className="font-semibold text-white">
-          Grafik Pendapatan
-        </h3>
+      <div className="mt-7 rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-4 shadow-lg sm:p-5">
+        <div className="mb-5">
+          <div className="flex items-center gap-2">
+            <span className="h-5 w-1 rounded-full bg-[#C9A96E]" />
+            <h3 className="font-semibold tracking-wide text-[#F5F1E8]">
+              Grafik Pendapatan
+            </h3>
+          </div>
 
-        <p className="mb-5 mt-1 text-sm text-slate-400">
-          Pendapatan berdasarkan tanggal transaksi selesai.
-        </p>
+          <p className="mt-2 text-xs text-[#8C8170]">
+            Pendapatan berdasarkan tanggal transaksi selesai.
+          </p>
+        </div>
 
         {loading ? (
-          <p className="py-12 text-center text-slate-400">
+          <p className="py-12 text-center text-sm text-[#A79B86]">
             Memuat grafik...
           </p>
         ) : chartData.length === 0 ? (
-          <p className="py-12 text-center text-slate-400">
+          <p className="py-12 text-center text-sm text-[#A79B86]">
             Tidak ada data transaksi selesai pada filter yang dipilih.
           </p>
         ) : (
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
+              <BarChart
+                data={chartData}
+                margin={{
+                  top: 10,
+                  right: 10,
+                  left: 5,
+                  bottom: 5,
+                }}
+              >
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="#334155"
+                  stroke="#3A352D"
+                  vertical={false}
                 />
+
                 <XAxis
                   dataKey="tanggal"
-                  stroke="#94a3b8"
-                  tick={{ fontSize: 11 }}
+                  stroke="#8C8170"
+                  tick={{ fontSize: 11, fill: "#A79B86" }}
+                  axisLine={{ stroke: "#514735" }}
+                  tickLine={false}
                 />
+
                 <YAxis
-                  stroke="#94a3b8"
-                  tick={{ fontSize: 11 }}
+                  stroke="#8C8170"
+                  tick={{ fontSize: 10, fill: "#A79B86" }}
                   tickFormatter={(value) =>
                     value >= 1000000
                       ? `Rp${(value / 1000000).toFixed(1)}jt`
@@ -602,24 +655,35 @@ function Reports() {
                         ? `Rp${(value / 1000).toFixed(0)}rb`
                         : `Rp${value}`
                   }
+                  axisLine={false}
+                  tickLine={false}
                   width={75}
                 />
+
                 <Tooltip
                   formatter={(value) => [
                     formatRupiah(value),
                     "Pendapatan",
                   ]}
                   contentStyle={{
-                    backgroundColor: "#0f172a",
-                    border: "1px solid #334155",
-                    borderRadius: "8px",
-                    color: "#fff",
+                    backgroundColor: "#171717",
+                    border: "1px solid #C9A96E",
+                    borderRadius: "10px",
+                    color: "#F5F1E8",
+                    fontSize: "12px",
                   }}
+                  labelStyle={{
+                    color: "#C9A96E",
+                    marginBottom: "5px",
+                  }}
+                  cursor={{ fill: "rgba(201, 169, 110, 0.08)" }}
                 />
+
                 <Bar
                   dataKey="pendapatan"
-                  fill="#38bdf8"
+                  fill="#C9A96E"
                   radius={[6, 6, 0, 0]}
+                  maxBarSize={55}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -628,51 +692,81 @@ function Reports() {
       </div>
 
       {/* Export */}
-      <div className="mt-8 flex flex-wrap gap-3">
-        <button
-          onClick={exportExcel}
-          disabled={loading || filteredOrders.length === 0}
-          className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
-        >
-          Export Excel
-        </button>
+      <div className="mt-7 rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-4 sm:p-5">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <h3 className="font-semibold text-[#F5F1E8]">
+              Export Laporan
+            </h3>
+            <p className="mt-1 text-xs text-[#8C8170]">
+              Unduh laporan transaksi dalam format Excel atau PDF.
+            </p>
+          </div>
 
-        <button
-          onClick={exportPDF}
-          disabled={loading || filteredOrders.length === 0}
-          className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-        >
-          Export PDF
-        </button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={exportExcel}
+              disabled={loading || filteredOrders.length === 0}
+              className="rounded-lg border border-[#C9A96E]/50 bg-[#C9A96E]/10 px-5 py-2.5 text-sm font-semibold text-[#D9BB83] transition duration-200 hover:bg-[#C9A96E] hover:text-[#111111] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Export Excel
+            </button>
+
+            <button
+              onClick={exportPDF}
+              disabled={loading || filteredOrders.length === 0}
+              className="rounded-lg bg-[#C9A96E] px-5 py-2.5 text-sm font-semibold text-[#111111] transition duration-200 hover:bg-[#D9BB83] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Export PDF
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Tabel transaksi */}
-      <div className="mt-8">
-        <h3 className="mb-3 text-lg font-semibold text-white">
-          Detail Transaksi
-        </h3>
+      <div className="mt-7">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="text-lg font-semibold tracking-wide text-[#F5F1E8]">
+              Detail Transaksi
+            </h3>
+            <p className="mt-1 text-xs text-[#8C8170]">
+              Daftar transaksi sesuai filter laporan.
+            </p>
+          </div>
 
-        <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950">
+          <span className="rounded-lg border border-[#C9A96E]/25 bg-[#C9A96E]/10 px-3 py-1.5 text-xs font-medium text-[#D9BB83]">
+            {filteredOrders.length} Transaksi
+          </span>
+        </div>
+
+        <div className="overflow-x-auto rounded-xl border border-[#C9A96E]/20 bg-[#202020] shadow-lg">
           <table className="w-full min-w-[650px] text-left text-sm">
-            <thead className="border-b border-slate-800 text-slate-400">
+            <thead className="border-b border-[#C9A96E]/20 bg-[#252525] text-[#C9A96E]">
               <tr>
-                <th className="px-4 py-3">Pelanggan</th>
-                <th className="px-4 py-3">Jumlah</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Tanggal</th>
+                <th className="px-4 py-4 font-semibold">Pelanggan</th>
+                <th className="px-4 py-4 font-semibold">Jumlah</th>
+                <th className="px-4 py-4 font-semibold">Status</th>
+                <th className="px-4 py-4 font-semibold">Tanggal</th>
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="4" className="px-4 py-8 text-center text-slate-400">
+                  <td
+                    colSpan="4"
+                    className="px-4 py-10 text-center text-[#A79B86]"
+                  >
                     Memuat transaksi...
                   </td>
                 </tr>
               ) : filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="px-4 py-8 text-center text-slate-400">
+                  <td
+                    colSpan="4"
+                    className="px-4 py-10 text-center text-[#A79B86]"
+                  >
                     Tidak ada transaksi ditemukan.
                   </td>
                 </tr>
@@ -680,26 +774,29 @@ function Reports() {
                 filteredOrders.map((order) => (
                   <tr
                     key={order.id}
-                    className="border-b border-slate-800 last:border-0"
+                    className="border-b border-[#C9A96E]/10 transition last:border-0 hover:bg-[#292929]"
                   >
-                    <td className="px-4 py-3 font-medium text-white">
+                    <td className="px-4 py-4 font-medium text-[#F5F1E8]">
                       {order.customer_name || "-"}
                     </td>
-                    <td className="px-4 py-3 text-slate-300">
+
+                    <td className="px-4 py-4 font-medium text-[#D9BB83]">
                       {formatRupiah(Number(order.amount || 0))}
                     </td>
-                    <td className="px-4 py-3">
+
+                    <td className="px-4 py-4">
                       <span
-                        className={`rounded px-2 py-1 text-xs ${
+                        className={`inline-flex rounded-md border px-2.5 py-1 text-xs font-medium ${
                           order.status === "selesai"
-                            ? "bg-green-500/10 text-green-400"
-                            : "bg-yellow-500/10 text-yellow-400"
+                            ? "border-[#C9A96E]/30 bg-[#C9A96E]/10 text-[#D9BB83]"
+                            : "border-yellow-500/20 bg-yellow-500/10 text-yellow-400"
                         }`}
                       >
                         {order.status || "-"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-slate-300">
+
+                    <td className="px-4 py-4 text-[#B5AA98]">
                       {new Date(order.created_at).toLocaleDateString("id-ID")}
                     </td>
                   </tr>
@@ -709,7 +806,7 @@ function Reports() {
           </table>
         </div>
 
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-3 text-xs text-[#8C8170]">
           Menampilkan {filteredOrders.length} dari {orders.length} transaksi.
         </p>
       </div>

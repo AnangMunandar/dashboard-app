@@ -1,11 +1,29 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { supabase } from "../lib/supabaseClient";
 import { formatRupiah } from "../lib/format";
 
 const inputClass =
-  "w-full min-w-0 rounded-lg border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-white outline-none focus:border-sky-500";
+  "w-full min-w-0 rounded-lg border border-[#C9A96E]/25 bg-[#171717] px-3 py-3 text-sm text-[#F5F1E8] outline-none placeholder-[#8C8170] transition focus:border-[#C9A96E] focus:ring-1 focus:ring-[#C9A96E]/30";
+
+const panelClass =
+  "rounded-xl border border-[#C9A96E]/20 bg-[#202020]";
+
+const tableHeadClass =
+  "border-b border-[#C9A96E]/20 bg-[#252525] text-[#B5AA98]";
+
+const tableBodyClass =
+  "divide-y divide-[#C9A96E]/10 text-[#D8CEBD]";
+
+const goldButtonClass =
+  "rounded-lg border border-[#D9BB83] bg-[#C9A96E] px-4 py-3 text-sm font-semibold text-[#171717] transition hover:bg-[#E0C38C] disabled:cursor-not-allowed disabled:opacity-50";
+
+const secondaryButtonClass =
+  "rounded-lg border border-[#C9A96E]/30 bg-[#C9A96E]/10 px-4 py-3 text-sm font-semibold text-[#D9BB83] transition hover:bg-[#C9A96E] hover:text-[#111111] disabled:cursor-not-allowed disabled:opacity-50";
+
+const dangerButtonClass =
+  "rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-400 transition hover:bg-red-500/20 disabled:opacity-50";
 
 function Orders() {
   const [orders, setOrders] = useState([]);
@@ -41,9 +59,33 @@ function Orders() {
   const [editProductId, setEditProductId] = useState("");
   const [editQuantity, setEditQuantity] = useState("1");
 
+  // Referensi untuk gulir otomatis
+  const editFormRef = useRef(null);
+  const detailRef = useRef(null);
+
   useEffect(() => {
     loadData();
   }, []);
+
+  // Gulir otomatis ke form edit
+  useEffect(() => {
+    if (showEditForm && editFormRef.current) {
+      editFormRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [showEditForm]);
+
+  // Gulir otomatis ke detail pesanan
+  useEffect(() => {
+    if (selectedOrder && !showEditForm && detailRef.current) {
+      detailRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [selectedOrder, showEditForm]);
 
   // Memuat data milik Admin yang sedang login
   async function loadData() {
@@ -134,7 +176,6 @@ function Orders() {
     );
   }
 
-  // Reset form pesanan baru
   function resetForm() {
     setCustomerId("");
     setInitialStatus("pending");
@@ -282,7 +323,6 @@ function Orders() {
 
     const items = getOrderItems(order.id);
 
-    // Produk yang sudah dihapus tidak boleh diedit secara otomatis
     if (items.some((item) => item.product_id === null)) {
       setError(
         "Pesanan ini memiliki produk yang sudah dihapus. Edit otomatis tidak tersedia."
@@ -379,7 +419,6 @@ function Orders() {
     );
   }
 
-  // Mengubah jumlah produk secara langsung pada form edit
   function updateEditCartQuantity(productId, value) {
     setEditCart((prev) =>
       prev.map((item) =>
@@ -431,7 +470,6 @@ function Orders() {
         throw new Error("Pesanan harus memiliki minimal satu produk.");
       }
 
-      // Validasi jumlah setiap produk
       const invalidItem = editCart.some(
         (item) =>
           !Number.isInteger(Number(item.quantity)) ||
@@ -444,10 +482,7 @@ function Orders() {
         );
       }
 
-      if (
-        !editCustomerId &&
-        !editCustomerName.trim()
-      ) {
+      if (!editCustomerId && !editCustomerName.trim()) {
         throw new Error("Nama pelanggan harus diisi.");
       }
 
@@ -607,65 +642,77 @@ function Orders() {
   return (
     <DashboardLayout>
       <div className="min-w-0">
-        <h2 className="text-xl font-bold text-white sm:text-2xl">
-          Manajemen Pesanan
-        </h2>
-
-        <p className="mt-2 text-sm text-slate-300 sm:text-base">
-          Kelola transaksi, rincian produk, dan status pesanan MasMuns.
-        </p>
+        <div className="mb-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#C9A96E]">
+            Transaction Management
+          </p>
+          <h2 className="mt-2 text-2xl font-bold tracking-wide text-[#F5F1E8] sm:text-3xl">
+            Manajemen Pesanan
+          </h2>
+          <p className="mt-2 text-sm text-[#A79B86] sm:text-base">
+            Kelola transaksi, rincian produk, dan status pesanan MasMuns.
+          </p>
+        </div>
 
         {error && (
-          <p className="mt-4 break-words rounded-lg bg-red-500/10 px-3 py-3 text-sm text-red-400">
+          <p className="mt-4 break-words rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
             {error}
           </p>
         )}
 
         {success && (
-          <p className="mt-4 break-words rounded-lg bg-emerald-500/10 px-3 py-3 text-sm text-emerald-400">
+          <p className="mt-4 break-words rounded-lg border border-[#C9A96E]/25 bg-[#C9A96E]/10 px-4 py-3 text-sm text-[#D9BB83]">
             {success}
           </p>
         )}
 
         {/* STATISTIK */}
-        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-            <p className="text-sm text-slate-400">Total Pesanan</p>
-            <h3 className="mt-2 text-2xl font-bold text-white">
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className={`${panelClass} p-5`}>
+            <p className="text-sm font-medium text-[#B5AA98]">Total Pesanan</p>
+            <h3 className="mt-3 text-3xl font-bold text-[#F5F1E8]">
               {loading ? "..." : totalOrders}
             </h3>
+            <p className="mt-2 text-xs text-[#8C8170]">Seluruh transaksi</p>
           </div>
 
-          <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-            <p className="text-sm text-slate-400">Menunggu</p>
-            <h3 className="mt-2 text-2xl font-bold text-amber-400">
+          <div className={`${panelClass} p-5`}>
+            <p className="text-sm font-medium text-[#B5AA98]">Menunggu</p>
+            <h3 className="mt-3 text-3xl font-bold text-yellow-400">
               {loading ? "..." : pendingOrders}
             </h3>
+            <p className="mt-2 text-xs text-[#8C8170]">Pesanan pending</p>
           </div>
 
-          <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-            <p className="text-sm text-slate-400">Selesai</p>
-            <h3 className="mt-2 text-2xl font-bold text-emerald-400">
+          <div className={`${panelClass} p-5`}>
+            <p className="text-sm font-medium text-[#B5AA98]">Selesai</p>
+            <h3 className="mt-3 text-3xl font-bold text-[#D9BB83]">
               {loading ? "..." : completedOrders}
             </h3>
+            <p className="mt-2 text-xs text-[#8C8170]">Transaksi selesai</p>
           </div>
 
-          <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-            <p className="text-sm text-slate-400">Pendapatan Selesai</p>
-            <h3 className="mt-2 break-words text-xl font-bold text-sky-400">
+          <div className={`${panelClass} p-5`}>
+            <p className="text-sm font-medium text-[#B5AA98]">
+              Pendapatan Selesai
+            </p>
+            <h3 className="mt-3 break-words text-xl font-bold text-[#D9BB83] sm:text-2xl">
               {loading ? "..." : formatRupiah(totalRevenue)}
             </h3>
+            <p className="mt-2 text-xs text-[#8C8170]">
+              Hanya pesanan selesai
+            </p>
           </div>
         </div>
 
         {/* DAFTAR PESANAN */}
-        <div className="mt-6 rounded-xl border border-slate-800 bg-slate-950 p-4 sm:p-5">
+        <div className={`${panelClass} mt-6 p-4 shadow-lg sm:p-6`}>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-lg font-semibold text-[#F5F1E8]">
                 Daftar Pesanan
               </h3>
-              <p className="mt-1 text-sm text-slate-400">
+              <p className="mt-1 text-sm text-[#8C8170]">
                 Lihat dan kelola seluruh transaksi Anda.
               </p>
             </div>
@@ -678,7 +725,7 @@ function Orders() {
                 setError("");
                 setSuccess("");
               }}
-              className="w-full rounded-lg bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-500 sm:w-auto"
+              className={goldButtonClass}
             >
               + Buat Pesanan
             </button>
@@ -688,25 +735,23 @@ function Orders() {
           {showForm && (
             <form
               onSubmit={handleCreateOrder}
-              className="mt-5 rounded-lg border border-slate-800 bg-slate-900 p-4 sm:p-5"
+              className="mt-5 rounded-xl border border-[#C9A96E]/20 bg-[#181818] p-4 sm:p-5"
             >
-              <h4 className="font-semibold text-white">
+              <h4 className="font-semibold text-[#F5F1E8]">
                 Form Pesanan Baru
               </h4>
 
               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-sm text-slate-300">
+                  <label className="mb-2 block text-sm text-[#D8CEBD]">
                     Pelanggan
                   </label>
-
                   <select
                     value={customerId}
                     onChange={(e) => setCustomerId(e.target.value)}
                     className={inputClass}
                   >
                     <option value="">Pelanggan umum</option>
-
                     {customers.map((customer) => (
                       <option key={customer.id} value={customer.id}>
                         {customer.name}
@@ -716,10 +761,9 @@ function Orders() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm text-slate-300">
+                  <label className="mb-2 block text-sm text-[#D8CEBD]">
                     Status Awal
                   </label>
-
                   <select
                     value={initialStatus}
                     onChange={(e) => {
@@ -731,15 +775,14 @@ function Orders() {
                     <option value="pending">Pending</option>
                     <option value="selesai">Selesai</option>
                   </select>
-
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-2 text-xs text-[#8C8170]">
                     Status selesai langsung mengurangi stok.
                   </p>
                 </div>
               </div>
 
-              <div className="mt-5 rounded-lg border border-slate-800 bg-slate-950 p-4">
-                <h5 className="font-semibold text-white">
+              <div className="mt-5 rounded-xl border border-[#C9A96E]/15 bg-[#202020] p-4">
+                <h5 className="font-semibold text-[#F5F1E8]">
                   Tambahkan Produk
                 </h5>
 
@@ -750,7 +793,6 @@ function Orders() {
                     className={inputClass}
                   >
                     <option value="">Pilih produk</option>
-
                     {products.map((product) => (
                       <option key={product.id} value={product.id}>
                         {product.name} - {formatRupiah(Number(product.price || 0))} (Stok: {product.stock})
@@ -771,31 +813,31 @@ function Orders() {
                   <button
                     type="button"
                     onClick={addToCart}
-                    className="rounded-lg bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-500"
+                    className={secondaryButtonClass}
                   >
                     Tambah
                   </button>
                 </div>
 
                 {products.length === 0 && (
-                  <p className="mt-3 text-sm text-amber-400">
+                  <p className="mt-3 text-sm text-[#D9BB83]">
                     Belum ada produk. Tambahkan produk terlebih dahulu.
                   </p>
                 )}
 
                 <div className="mt-5">
-                  <h5 className="font-semibold text-white">
+                  <h5 className="font-semibold text-[#F5F1E8]">
                     Rincian Pesanan
                   </h5>
 
                   {cart.length === 0 ? (
-                    <p className="py-5 text-center text-sm text-slate-400">
+                    <p className="py-5 text-center text-sm text-[#8C8170]">
                       Belum ada produk ditambahkan.
                     </p>
                   ) : (
-                    <div className="mt-3 overflow-x-auto rounded-lg border border-slate-800">
+                    <div className="mt-3 overflow-x-auto rounded-lg border border-[#C9A96E]/15">
                       <table className="w-full min-w-[550px] text-left text-sm">
-                        <thead className="bg-slate-900 text-slate-400">
+                        <thead className={tableHeadClass}>
                           <tr>
                             <th className="px-3 py-3">Produk</th>
                             <th className="px-3 py-3">Harga</th>
@@ -804,8 +846,7 @@ function Orders() {
                             <th className="px-3 py-3">Aksi</th>
                           </tr>
                         </thead>
-
-                        <tbody className="divide-y divide-slate-800 text-slate-300">
+                        <tbody className={tableBodyClass}>
                           {cart.map((item) => {
                             const product = products.find(
                               (product) =>
@@ -816,16 +857,12 @@ function Orders() {
 
                             return (
                               <tr key={item.product_id}>
-                                <td className="px-3 py-3">
-                                  {product.name}
-                                </td>
+                                <td className="px-3 py-3">{product.name}</td>
                                 <td className="px-3 py-3">
                                   {formatRupiah(Number(product.price || 0))}
                                 </td>
-                                <td className="px-3 py-3">
-                                  {item.quantity}
-                                </td>
-                                <td className="px-3 py-3 font-medium text-white">
+                                <td className="px-3 py-3">{item.quantity}</td>
+                                <td className="px-3 py-3 font-medium text-[#D9BB83]">
                                   {formatRupiah(
                                     Number(product.price || 0) * item.quantity
                                   )}
@@ -836,7 +873,7 @@ function Orders() {
                                     onClick={() =>
                                       removeFromCart(item.product_id)
                                     }
-                                    className="rounded-lg bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/20"
+                                    className={dangerButtonClass}
                                   >
                                     Hapus
                                   </button>
@@ -849,11 +886,11 @@ function Orders() {
                     </div>
                   )}
 
-                  <div className="mt-4 flex flex-col gap-2 border-t border-slate-800 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                    <span className="text-sm text-slate-400">
+                  <div className="mt-4 flex flex-col gap-2 border-t border-[#C9A96E]/15 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-sm text-[#B5AA98]">
                       Total Pesanan
                     </span>
-                    <span className="text-xl font-bold text-sky-400">
+                    <span className="text-xl font-bold text-[#D9BB83]">
                       {formatRupiah(getCartTotal())}
                     </span>
                   </div>
@@ -864,7 +901,7 @@ function Orders() {
                 <button
                   type="submit"
                   disabled={saving || cart.length === 0}
-                  className="w-full rounded-lg bg-emerald-600 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50 sm:w-auto"
+                  className={goldButtonClass}
                 >
                   {saving ? "Menyimpan..." : "Simpan Pesanan"}
                 </button>
@@ -873,7 +910,7 @@ function Orders() {
                   type="button"
                   onClick={resetForm}
                   disabled={saving}
-                  className="w-full rounded-lg border border-slate-700 px-5 py-3 text-sm text-slate-300 hover:bg-slate-800 sm:w-auto"
+                  className={secondaryButtonClass}
                 >
                   Batal
                 </button>
@@ -904,17 +941,17 @@ function Orders() {
 
           {/* TABEL PESANAN */}
           {loading ? (
-            <p className="py-10 text-center text-slate-400">
+            <p className="py-10 text-center text-[#A79B86]">
               Memuat data pesanan...
             </p>
           ) : filteredOrders.length === 0 ? (
-            <p className="py-10 text-center text-slate-400">
+            <p className="py-10 text-center text-[#8C8170]">
               Tidak ada pesanan ditemukan.
             </p>
           ) : (
-            <div className="mt-5 overflow-x-auto rounded-lg border border-slate-800">
+            <div className="mt-5 overflow-x-auto rounded-xl border border-[#C9A96E]/15">
               <table className="w-full min-w-[1000px] text-left text-sm">
-                <thead className="border-b border-slate-800 bg-slate-900 text-slate-400">
+                <thead className={tableHeadClass}>
                   <tr>
                     <th className="px-4 py-3">No. Pesanan</th>
                     <th className="px-4 py-3">Tanggal</th>
@@ -926,7 +963,7 @@ function Orders() {
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-slate-800 text-slate-300">
+                <tbody className={tableBodyClass}>
                   {filteredOrders.map((order) => {
                     const items = getOrderItems(order.id);
                     const itemCount = items.reduce(
@@ -935,48 +972,45 @@ function Orders() {
                     );
 
                     return (
-                      <tr key={order.id} className="hover:bg-slate-900">
-                        <td className="px-4 py-4 font-semibold text-white">
+                      <tr
+                        key={order.id}
+                        className="transition hover:bg-[#252525]"
+                      >
+                        <td className="px-4 py-4 font-semibold text-[#F5F1E8]">
                           #{order.id}
                         </td>
-
-                        <td className="px-4 py-4">
+                        <td className="whitespace-nowrap px-4 py-4 text-[#B5AA98]">
                           {new Date(order.created_at).toLocaleDateString("id-ID")}
                         </td>
-
-                        <td className="px-4 py-4">
+                        <td className="px-4 py-4 text-[#F5F1E8]">
                           {order.customer_name}
                         </td>
-
-                        <td className="px-4 py-4">
+                        <td className="px-4 py-4 text-[#B5AA98]">
                           {itemCount} unit
                         </td>
-
-                        <td className="px-4 py-4 font-medium text-sky-400">
+                        <td className="whitespace-nowrap px-4 py-4 font-semibold text-[#D9BB83]">
                           {formatRupiah(Number(order.amount || 0))}
                         </td>
-
                         <td className="px-4 py-4">
                           <span
-                            className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium ${
+                            className={`whitespace-nowrap rounded-md border px-3 py-1 text-xs font-semibold ${
                               order.status === "selesai"
-                                ? "bg-emerald-500/10 text-emerald-400"
-                                : "bg-amber-500/10 text-amber-400"
+                                ? "border-[#C9A96E]/30 bg-[#C9A96E]/10 text-[#D9BB83]"
+                                : "border-yellow-500/20 bg-yellow-500/10 text-yellow-400"
                             }`}
                           >
-                            {order.status}
+                            {order.status === "selesai" ? "Selesai" : "Pending"}
                           </span>
                         </td>
-
                         <td className="px-4 py-4">
                           <div className="flex flex-wrap gap-2">
                             <button
                               type="button"
                               onClick={() => {
-                                setSelectedOrder(order);
                                 cancelEdit();
+                                setSelectedOrder(order);
                               }}
-                              className="rounded-lg bg-sky-500/10 px-3 py-2 text-xs font-semibold text-sky-400 hover:bg-sky-500/20"
+                              className="rounded-lg border border-[#C9A96E]/25 bg-[#C9A96E]/10 px-3 py-2 text-xs font-semibold text-[#D9BB83] transition hover:bg-[#C9A96E] hover:text-[#111111]"
                             >
                               Detail
                             </button>
@@ -984,10 +1018,8 @@ function Orders() {
                             <button
                               type="button"
                               onClick={() => handleOpenEdit(order)}
-                              disabled={
-                                saving || processingId === order.id
-                              }
-                              className="rounded-lg bg-violet-500/10 px-3 py-2 text-xs font-semibold text-violet-400 hover:bg-violet-500/20 disabled:opacity-50"
+                              disabled={saving || processingId === order.id}
+                              className="rounded-lg border border-[#C9A96E]/25 bg-[#252525] px-3 py-2 text-xs font-semibold text-[#F5F1E8] transition hover:border-[#C9A96E] disabled:opacity-50"
                             >
                               Edit
                             </button>
@@ -996,7 +1028,7 @@ function Orders() {
                               type="button"
                               disabled={processingId === order.id || saving}
                               onClick={() => handleChangeStatus(order)}
-                              className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 disabled:opacity-50"
+                              className="rounded-lg border border-[#C9A96E]/25 bg-[#C9A96E]/10 px-3 py-2 text-xs font-semibold text-[#D9BB83] transition hover:bg-[#C9A96E]/20 disabled:opacity-50"
                             >
                               {processingId === order.id
                                 ? "Memproses..."
@@ -1009,7 +1041,7 @@ function Orders() {
                               type="button"
                               disabled={processingId === order.id || saving}
                               onClick={() => handleDeleteOrder(order)}
-                              className="rounded-lg bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/20 disabled:opacity-50"
+                              className={dangerButtonClass}
                             >
                               Hapus
                             </button>
@@ -1023,33 +1055,33 @@ function Orders() {
             </div>
           )}
 
-          <p className="mt-4 text-xs text-slate-500">
+          <p className="mt-4 text-xs text-[#8C8170]">
             Menampilkan {filteredOrders.length} dari {totalOrders} pesanan.
           </p>
 
-          <p className="mt-2 text-xs text-slate-500 sm:hidden">
+          <p className="mt-2 text-xs text-[#8C8170] sm:hidden">
             Geser tabel ke kiri atau kanan untuk melihat seluruh kolom.
           </p>
         </div>
 
         {/* DETAIL PESANAN */}
         {selectedOrder && (
-          <div className="mt-6 rounded-xl border border-sky-800 bg-slate-950 p-4 sm:p-5">
+          <div
+            ref={detailRef}
+            className={`${panelClass} mt-6 scroll-mt-6 p-4 shadow-lg sm:p-6`}
+          >
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm text-slate-400">
-                  Detail Pesanan
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#C9A96E]">
+                  Order Details
                 </p>
-
-                <h3 className="mt-1 text-xl font-bold text-white">
+                <h3 className="mt-2 text-xl font-bold text-[#F5F1E8]">
                   Pesanan #{selectedOrder.id}
                 </h3>
-
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm text-[#B5AA98]">
                   {selectedOrder.customer_name}
                 </p>
-
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm text-[#8C8170]">
                   {new Date(selectedOrder.created_at).toLocaleString("id-ID")}
                 </p>
               </div>
@@ -1059,7 +1091,7 @@ function Orders() {
                   type="button"
                   onClick={() => handleOpenEdit(selectedOrder)}
                   disabled={saving}
-                  className="w-full rounded-lg bg-violet-500/10 px-4 py-3 text-sm font-semibold text-violet-400 hover:bg-violet-500/20 disabled:opacity-50 sm:w-auto"
+                  className={secondaryButtonClass}
                 >
                   Edit Pesanan
                 </button>
@@ -1070,25 +1102,25 @@ function Orders() {
                     setSelectedOrder(null);
                     cancelEdit();
                   }}
-                  className="w-full rounded-lg border border-slate-700 px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 sm:w-auto"
+                  className="rounded-lg border border-[#C9A96E]/20 px-4 py-3 text-sm text-[#B5AA98] transition hover:bg-[#252525]"
                 >
                   Tutup Detail
                 </button>
               </div>
             </div>
 
-            <h4 className="mb-3 mt-6 font-semibold text-white">
+            <h4 className="mb-3 mt-6 font-semibold text-[#F5F1E8]">
               Rincian Produk
             </h4>
 
             {selectedItems.length === 0 ? (
-              <p className="py-5 text-center text-sm text-slate-400">
+              <p className="py-5 text-center text-sm text-[#8C8170]">
                 Tidak ada rincian produk pada pesanan ini.
               </p>
             ) : (
-              <div className="overflow-x-auto rounded-lg border border-slate-800">
+              <div className="overflow-x-auto rounded-xl border border-[#C9A96E]/15">
                 <table className="w-full min-w-[550px] text-left text-sm">
-                  <thead className="border-b border-slate-800 bg-slate-900 text-slate-400">
+                  <thead className={tableHeadClass}>
                     <tr>
                       <th className="px-4 py-3">Produk</th>
                       <th className="px-4 py-3">Harga Satuan</th>
@@ -1097,22 +1129,15 @@ function Orders() {
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-slate-800 text-slate-300">
+                  <tbody className={tableBodyClass}>
                     {selectedItems.map((item) => (
                       <tr key={item.id}>
-                        <td className="px-4 py-4">
-                          {item.product_name}
-                        </td>
-
+                        <td className="px-4 py-4">{item.product_name}</td>
                         <td className="px-4 py-4">
                           {formatRupiah(Number(item.unit_price || 0))}
                         </td>
-
-                        <td className="px-4 py-4">
-                          {item.quantity}
-                        </td>
-
-                        <td className="px-4 py-4 font-medium text-white">
+                        <td className="px-4 py-4">{item.quantity}</td>
+                        <td className="px-4 py-4 font-semibold text-[#D9BB83]">
                           {formatRupiah(
                             Number(item.unit_price || 0) *
                               Number(item.quantity || 0)
@@ -1125,12 +1150,11 @@ function Orders() {
               </div>
             )}
 
-            <div className="mt-4 flex flex-col gap-2 border-t border-slate-800 pt-4 sm:flex-row sm:items-center sm:justify-between">
-              <span className="text-sm text-slate-400">
+            <div className="mt-4 flex flex-col gap-2 border-t border-[#C9A96E]/15 pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <span className="text-sm text-[#B5AA98]">
                 Total Pesanan
               </span>
-
-              <span className="text-xl font-bold text-sky-400">
+              <span className="text-xl font-bold text-[#D9BB83]">
                 {formatRupiah(Number(selectedOrder.amount || 0))}
               </span>
             </div>
@@ -1140,21 +1164,24 @@ function Orders() {
         {/* FORM EDIT PESANAN */}
         {showEditForm && editingOrder && (
           <form
+            ref={editFormRef}
             onSubmit={handleUpdateOrder}
-            className="mt-6 rounded-xl border border-violet-800 bg-slate-950 p-4 sm:p-5"
+            className={`${panelClass} mt-6 scroll-mt-6 p-4 shadow-lg sm:p-6`}
           >
             <div>
-              <p className="text-sm text-slate-400">Edit Pesanan</p>
-              <h3 className="mt-1 text-xl font-bold text-white">
+              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#C9A96E]">
+                Edit Transaction
+              </p>
+              <h3 className="mt-2 text-xl font-bold text-[#F5F1E8]">
                 Pesanan #{editingOrder.id}
               </h3>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[#8C8170]">
                 Status saat ini: {editingOrder.status}
               </p>
             </div>
 
             <div className="mt-5">
-              <label className="mb-2 block text-sm text-slate-300">
+              <label className="mb-2 block text-sm text-[#D8CEBD]">
                 Pelanggan
               </label>
 
@@ -1164,7 +1191,6 @@ function Orders() {
                 className={inputClass}
               >
                 <option value="">Pelanggan umum / nama manual</option>
-
                 {customers.map((customer) => (
                   <option key={customer.id} value={customer.id}>
                     {customer.name}
@@ -1184,8 +1210,8 @@ function Orders() {
               )}
             </div>
 
-            <div className="mt-5 rounded-lg border border-slate-800 bg-slate-900 p-4">
-              <h4 className="font-semibold text-white">
+            <div className="mt-5 rounded-xl border border-[#C9A96E]/15 bg-[#181818] p-4">
+              <h4 className="font-semibold text-[#F5F1E8]">
                 Tambahkan Produk
               </h4>
 
@@ -1196,7 +1222,6 @@ function Orders() {
                   className={inputClass}
                 >
                   <option value="">Pilih produk</option>
-
                   {products.map((product) => (
                     <option key={product.id} value={product.id}>
                       {product.name} - {formatRupiah(Number(product.price || 0))} (Stok: {product.stock})
@@ -1217,24 +1242,24 @@ function Orders() {
                 <button
                   type="button"
                   onClick={addToEditCart}
-                  className="rounded-lg bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-500"
+                  className={secondaryButtonClass}
                 >
                   Tambah
                 </button>
               </div>
 
-              <h4 className="mb-3 mt-6 font-semibold text-white">
+              <h4 className="mb-3 mt-6 font-semibold text-[#F5F1E8]">
                 Rincian Produk Pesanan
               </h4>
 
               {editCart.length === 0 ? (
-                <p className="py-5 text-center text-sm text-slate-400">
+                <p className="py-5 text-center text-sm text-[#8C8170]">
                   Belum ada produk. Tambahkan produk terlebih dahulu.
                 </p>
               ) : (
-                <div className="overflow-x-auto rounded-lg border border-slate-800">
+                <div className="overflow-x-auto rounded-xl border border-[#C9A96E]/15">
                   <table className="w-full min-w-[600px] text-left text-sm">
-                    <thead className="bg-slate-950 text-slate-400">
+                    <thead className={tableHeadClass}>
                       <tr>
                         <th className="px-3 py-3">Produk</th>
                         <th className="px-3 py-3">Harga</th>
@@ -1244,17 +1269,13 @@ function Orders() {
                       </tr>
                     </thead>
 
-                    <tbody className="divide-y divide-slate-800 text-slate-300">
+                    <tbody className={tableBodyClass}>
                       {editCart.map((item) => (
                         <tr key={item.product_id}>
-                          <td className="px-3 py-3">
-                            {item.product_name}
-                          </td>
-
+                          <td className="px-3 py-3">{item.product_name}</td>
                           <td className="px-3 py-3">
                             {formatRupiah(item.unit_price)}
                           </td>
-
                           <td className="px-3 py-3">
                             <input
                               type="number"
@@ -1267,25 +1288,23 @@ function Orders() {
                                   e.target.value
                                 )
                               }
-                              className="w-24 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-center text-white outline-none focus:border-sky-500"
+                              className="w-24 rounded-lg border border-[#C9A96E]/25 bg-[#171717] px-3 py-2 text-center text-[#F5F1E8] outline-none focus:border-[#C9A96E]"
                               aria-label={`Jumlah ${item.product_name}`}
                             />
                           </td>
-
-                          <td className="px-3 py-3 font-medium text-white">
+                          <td className="px-3 py-3 font-medium text-[#D9BB83]">
                             {formatRupiah(
                               Number(item.unit_price || 0) *
                                 Number(item.quantity || 0)
                             )}
                           </td>
-
                           <td className="px-3 py-3">
                             <button
                               type="button"
                               onClick={() =>
                                 removeFromEditCart(item.product_id)
                               }
-                              className="rounded-lg bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/20"
+                              className={dangerButtonClass}
                             >
                               Hapus
                             </button>
@@ -1297,24 +1316,23 @@ function Orders() {
                 </div>
               )}
 
-              <div className="mt-4 flex flex-col gap-2 border-t border-slate-800 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                <span className="text-sm text-slate-400">
+              <div className="mt-4 flex flex-col gap-2 border-t border-[#C9A96E]/15 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-sm text-[#B5AA98]">
                   Total Pesanan
                 </span>
-
-                <span className="text-xl font-bold text-sky-400">
+                <span className="text-xl font-bold text-[#D9BB83]">
                   {formatRupiah(getEditCartTotal())}
                 </span>
               </div>
 
-              <p className="mt-3 text-xs text-slate-500">
+              <p className="mt-3 text-xs text-[#8C8170]">
                 Harga produk lama mengikuti harga transaksi sebelumnya.
                 Produk baru menggunakan harga saat ini.
               </p>
             </div>
 
             {editingOrder.status === "selesai" && (
-              <p className="mt-4 rounded-lg bg-amber-500/10 p-3 text-sm text-amber-300">
+              <p className="mt-4 rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-3 text-sm text-yellow-300">
                 Pesanan ini sudah selesai. Perubahan jumlah produk akan
                 menyesuaikan stok secara otomatis saat disimpan.
               </p>
@@ -1324,7 +1342,7 @@ function Orders() {
               <button
                 type="submit"
                 disabled={saving || editCart.length === 0}
-                className="w-full rounded-lg bg-emerald-600 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50 sm:w-auto"
+                className={goldButtonClass}
               >
                 {saving ? "Menyimpan..." : "Simpan Perubahan"}
               </button>
@@ -1333,7 +1351,7 @@ function Orders() {
                 type="button"
                 onClick={cancelEdit}
                 disabled={saving}
-                className="w-full rounded-lg border border-slate-700 px-5 py-3 text-sm text-slate-300 hover:bg-slate-800 disabled:opacity-50 sm:w-auto"
+                className={secondaryButtonClass}
               >
                 Batal
               </button>

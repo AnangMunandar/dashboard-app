@@ -10,6 +10,9 @@ const sourceLabels = {
   penyesuaian_manual: "Penyesuaian Manual",
 };
 
+const inputClass =
+  "w-full min-w-0 rounded-lg border border-[#C9A96E]/25 bg-[#171717] px-4 py-3 text-sm text-[#F5F1E8] outline-none transition placeholder:text-[#817765] focus:border-[#C9A96E] focus:ring-1 focus:ring-[#C9A96E]/30";
+
 function formatDate(date) {
   return new Date(date).toLocaleString("id-ID", {
     day: "2-digit",
@@ -63,7 +66,9 @@ function StockHistory() {
 
   const filteredMovements = movements.filter((item) => {
     const matchesSearch =
-      item.product_name.toLowerCase().includes(search.toLowerCase()) ||
+      (item.product_name || "")
+        .toLowerCase()
+        .includes(search.toLowerCase()) ||
       String(item.reference_id || "").includes(search);
 
     const matchesFilter =
@@ -76,76 +81,115 @@ function StockHistory() {
 
   const totalMasuk = movements
     .filter((item) => item.movement_type === "masuk")
-    .reduce((total, item) => total + item.quantity, 0);
+    .reduce((total, item) => total + Number(item.quantity || 0), 0);
 
   const totalKeluar = movements
     .filter((item) => item.movement_type === "keluar")
-    .reduce((total, item) => total + item.quantity, 0);
+    .reduce((total, item) => total + Number(item.quantity || 0), 0);
+
+  const statCards = [
+    {
+      title: "Total Pergerakan",
+      value: movements.length,
+      note: "Seluruh catatan perubahan stok",
+    },
+    {
+      title: "Total Stok Masuk",
+      value: `+${totalMasuk} unit`,
+      note: "Akumulasi stok masuk",
+    },
+    {
+      title: "Total Stok Keluar",
+      value: `-${totalKeluar} unit`,
+      note: "Akumulasi stok keluar",
+    },
+  ];
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 text-white">
+      <div className="min-w-0 space-y-6">
+        {/* HEADER */}
         <div>
-          <h1 className="text-2xl font-bold">Riwayat Stok</h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#C9A96E]">
+            Inventory Management
+          </p>
+
+          <h1 className="mt-2 text-xl font-bold tracking-tight text-[#F5F1E8] sm:text-2xl">
+            Riwayat Stok
+          </h1>
+
+          <p className="mt-2 text-sm text-[#A79B86]">
             Pantau seluruh perubahan stok produk bisnis Anda.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-xl border border-slate-800 bg-slate-950 p-5">
-            <p className="text-sm text-slate-400">Total Pergerakan</p>
-            <h2 className="mt-2 text-2xl font-bold">
-              {movements.length}
-            </h2>
-          </div>
+        {/* STATISTIK */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {statCards.map((item) => (
+            <div
+              key={item.title}
+              className="relative overflow-hidden rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-5 shadow-lg transition hover:border-[#C9A96E]/50"
+            >
+              <div className="absolute left-0 top-0 h-full w-1 bg-[#C9A96E]/70" />
 
-          <div className="rounded-xl border border-slate-800 bg-slate-950 p-5">
-            <p className="text-sm text-slate-400">Total Stok Masuk</p>
-            <h2 className="mt-2 text-2xl font-bold text-emerald-400">
-              +{totalMasuk} unit
-            </h2>
-          </div>
+              <div className="pl-2">
+                <p className="text-sm text-[#A79B86]">
+                  {item.title}
+                </p>
 
-          <div className="rounded-xl border border-slate-800 bg-slate-950 p-5">
-            <p className="text-sm text-slate-400">Total Stok Keluar</p>
-            <h2 className="mt-2 text-2xl font-bold text-red-400">
-              -{totalKeluar} unit
-            </h2>
-          </div>
+                <h2 className="mt-2 break-words text-2xl font-bold text-[#F5F1E8]">
+                  {item.value}
+                </h2>
+
+                <p className="mt-1 text-xs text-[#8C8170]">
+                  {item.note}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div className="rounded-xl border border-slate-800 bg-slate-950 p-5">
+        {/* DAFTAR RIWAYAT */}
+        <div className="rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-4 shadow-lg sm:p-5">
           <div className="mb-5 flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div>
-              <h2 className="text-lg font-semibold">Daftar Riwayat Stok</h2>
-              <p className="mt-1 text-sm text-slate-400">
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#C9A96E]">
+                Stock Activity
+              </p>
+
+              <h2 className="mt-1 text-lg font-semibold text-[#F5F1E8]">
+                Daftar Riwayat Stok
+              </h2>
+
+              <p className="mt-1 text-sm text-[#A79B86]">
                 Catatan perubahan stok seluruh produk.
               </p>
             </div>
 
             <button
+              type="button"
               onClick={loadMovements}
               disabled={loading}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="w-full rounded-lg bg-[#C9A96E] px-4 py-3 text-sm font-semibold text-[#17130D] transition hover:bg-[#D8B982] disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
             >
               {loading ? "Memuat..." : "Muat Ulang"}
             </button>
           </div>
 
-          <div className="mb-5 flex flex-col gap-3 sm:flex-row">
+          {/* PENCARIAN DAN FILTER */}
+          <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_220px]">
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari nama produk atau nomor pesanan..."
-              className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-white outline-none focus:border-blue-500"
+              className={inputClass}
             />
 
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-white outline-none"
+              className={inputClass}
             >
               <option value="semua">Semua Pergerakan</option>
               <option value="masuk">Stok Masuk</option>
@@ -153,33 +197,35 @@ function StockHistory() {
             </select>
           </div>
 
+          {/* ERROR */}
           {error && (
-            <div className="rounded-lg border border-red-800 bg-red-950 p-4 text-sm text-red-300">
+            <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
               {error}
             </div>
           )}
 
+          {/* TABEL */}
           {loading ? (
-            <p className="py-10 text-center text-slate-400">
+            <p className="py-10 text-center text-[#A79B86]">
               Memuat riwayat stok...
             </p>
           ) : !error && filteredMovements.length === 0 ? (
-            <p className="py-10 text-center text-slate-400">
+            <p className="py-10 text-center text-[#A79B86]">
               Belum ada riwayat stok yang ditemukan.
             </p>
           ) : !error ? (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-xl border border-[#C9A96E]/15">
               <table className="w-full min-w-[850px] text-left text-sm">
-                <thead>
-                  <tr className="border-b border-slate-800 text-slate-400">
-                    <th className="px-4 py-3">Tanggal</th>
-                    <th className="px-4 py-3">Produk</th>
-                    <th className="px-4 py-3">Pergerakan</th>
-                    <th className="px-4 py-3">Jumlah</th>
-                    <th className="px-4 py-3">Stok Sebelum</th>
-                    <th className="px-4 py-3">Stok Sesudah</th>
-                    <th className="px-4 py-3">Sumber</th>
-                    <th className="px-4 py-3">Keterangan</th>
+                <thead className="bg-[#181818] text-xs uppercase tracking-wider text-[#C9A96E]">
+                  <tr className="border-b border-[#C9A96E]/15">
+                    <th className="px-4 py-4">Tanggal</th>
+                    <th className="px-4 py-4">Produk</th>
+                    <th className="px-4 py-4">Pergerakan</th>
+                    <th className="px-4 py-4">Jumlah</th>
+                    <th className="px-4 py-4">Stok Sebelum</th>
+                    <th className="px-4 py-4">Stok Sesudah</th>
+                    <th className="px-4 py-4">Sumber</th>
+                    <th className="px-4 py-4">Keterangan</th>
                   </tr>
                 </thead>
 
@@ -187,22 +233,22 @@ function StockHistory() {
                   {filteredMovements.map((item) => (
                     <tr
                       key={item.id}
-                      className="border-b border-slate-800/70 hover:bg-slate-900/70"
+                      className="border-b border-[#C9A96E]/10 text-[#C8BDAA] transition hover:bg-[#292929]"
                     >
-                      <td className="whitespace-nowrap px-4 py-4 text-slate-300">
+                      <td className="whitespace-nowrap px-4 py-4 text-[#A79B86]">
                         {formatDate(item.created_at)}
                       </td>
 
-                      <td className="px-4 py-4 font-medium text-white">
+                      <td className="px-4 py-4 font-medium text-[#F5F1E8]">
                         {item.product_name}
                       </td>
 
                       <td className="px-4 py-4">
                         <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                          className={`rounded-full border px-3 py-1 text-xs font-semibold ${
                             item.movement_type === "masuk"
-                              ? "bg-emerald-500/10 text-emerald-400"
-                              : "bg-red-500/10 text-red-400"
+                              ? "border-[#C9A96E]/30 bg-[#C9A96E]/10 text-[#D8B982]"
+                              : "border-red-500/20 bg-red-500/10 text-red-400"
                           }`}
                         >
                           {item.movement_type === "masuk"
@@ -212,9 +258,9 @@ function StockHistory() {
                       </td>
 
                       <td
-                        className={`px-4 py-4 font-semibold ${
+                        className={`whitespace-nowrap px-4 py-4 font-semibold ${
                           item.movement_type === "masuk"
-                            ? "text-emerald-400"
+                            ? "text-[#D8B982]"
                             : "text-red-400"
                         }`}
                       >
@@ -222,24 +268,25 @@ function StockHistory() {
                         {item.quantity} unit
                       </td>
 
-                      <td className="px-4 py-4 text-slate-300">
+                      <td className="px-4 py-4 text-[#C8BDAA]">
                         {item.stock_before}
                       </td>
 
-                      <td className="px-4 py-4 text-slate-300">
+                      <td className="px-4 py-4 text-[#C8BDAA]">
                         {item.stock_after}
                       </td>
 
-                      <td className="px-4 py-4 text-slate-300">
+                      <td className="px-4 py-4 text-[#C8BDAA]">
                         {sourceLabels[item.source] || item.source}
+
                         {item.reference_id && (
-                          <p className="mt-1 text-xs text-slate-500">
+                          <p className="mt-1 text-xs text-[#8C8170]">
                             Pesanan #{item.reference_id}
                           </p>
                         )}
                       </td>
 
-                      <td className="max-w-xs px-4 py-4 text-slate-400">
+                      <td className="max-w-xs px-4 py-4 text-[#A79B86]">
                         {item.notes || "-"}
                       </td>
                     </tr>
@@ -249,8 +296,12 @@ function StockHistory() {
             </div>
           ) : null}
 
-          <p className="mt-4 text-xs text-slate-500">
+          <p className="mt-4 text-xs text-[#8C8170]">
             Menampilkan {filteredMovements.length} dari {movements.length} riwayat.
+          </p>
+
+          <p className="mt-2 text-xs text-[#8C8170] sm:hidden">
+            Geser tabel ke kiri atau kanan untuk melihat seluruh kolom.
           </p>
         </div>
       </div>

@@ -21,7 +21,7 @@ function Profile() {
   const [success, setSuccess] = useState("");
 
   const inputClass =
-    "w-full min-w-0 rounded-lg border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-white outline-none focus:border-blue-500";
+    "w-full min-w-0 rounded-lg border border-[#C9A96E]/25 bg-[#171717] px-4 py-3 text-sm text-[#F5F1E8] outline-none transition placeholder:text-[#817765] focus:border-[#C9A96E] focus:ring-1 focus:ring-[#C9A96E]/30";
 
   useEffect(() => {
     loadProfile();
@@ -42,14 +42,14 @@ function Profile() {
       return;
     }
 
-    const { data, error } = await supabase
+    const { data, error: queryError } = await supabase
       .from("business_profiles")
       .select("*")
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (error) {
-      setError("Gagal memuat profil bisnis: " + error.message);
+    if (queryError) {
+      setError("Gagal memuat profil bisnis: " + queryError.message);
     } else if (data) {
       setForm({
         business_name: data.business_name || "",
@@ -122,68 +122,72 @@ function Profile() {
 
     setSaving(true);
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-    if (userError || !user) {
-      setError("Sesi login tidak ditemukan. Silakan login kembali.");
-      setSaving(false);
-      return;
-    }
-
-    let logoUrl = form.logo_url;
-
-    // Unggah logo baru jika Admin memilih file
-    if (logoFile) {
-      const extensions = {
-        "image/png": "png",
-        "image/jpeg": "jpg",
-        "image/webp": "webp",
-      };
-
-      const fileName = `${user.id}/${Date.now()}.${extensions[logoFile.type]}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("business-logos")
-        .upload(fileName, logoFile, {
-          contentType: logoFile.type,
-          upsert: false,
-        });
-
-      if (uploadError) {
-        setError("Gagal mengunggah logo: " + uploadError.message);
-        setSaving(false);
-        return;
+      if (userError || !user) {
+        throw new Error(
+          "Sesi login tidak ditemukan. Silakan login kembali."
+        );
       }
 
-      const { data: publicUrlData } = supabase.storage
-        .from("business-logos")
-        .getPublicUrl(fileName);
+      let logoUrl = form.logo_url;
 
-      logoUrl = publicUrlData.publicUrl;
-    }
+      // Unggah logo baru jika Admin memilih file
+      if (logoFile) {
+        const extensions = {
+          "image/png": "png",
+          "image/jpeg": "jpg",
+          "image/webp": "webp",
+        };
 
-    const profileData = {
-      user_id: user.id,
-      business_name: form.business_name.trim(),
-      phone: form.phone.trim() || null,
-      email: form.email.trim() || null,
-      address: form.address.trim() || null,
-      logo_url: logoUrl || null,
-      updated_at: new Date().toISOString(),
-    };
+        const fileName = `${user.id}/${Date.now()}.${extensions[logoFile.type]}`;
 
-    const { error: saveError } = await supabase
-      .from("business_profiles")
-      .upsert(profileData, {
-        onConflict: "user_id",
-      });
+        const { error: uploadError } = await supabase.storage
+          .from("business-logos")
+          .upload(fileName, logoFile, {
+            contentType: logoFile.type,
+            upsert: false,
+          });
 
-    if (saveError) {
-      setError("Gagal menyimpan profil bisnis: " + saveError.message);
-    } else {
+        if (uploadError) {
+          throw new Error(
+            "Gagal mengunggah logo: " + uploadError.message
+          );
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from("business-logos")
+          .getPublicUrl(fileName);
+
+        logoUrl = publicUrlData.publicUrl;
+      }
+
+      const profileData = {
+        user_id: user.id,
+        business_name: form.business_name.trim(),
+        phone: form.phone.trim() || null,
+        email: form.email.trim() || null,
+        address: form.address.trim() || null,
+        logo_url: logoUrl || null,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error: saveError } = await supabase
+        .from("business_profiles")
+        .upsert(profileData, {
+          onConflict: "user_id",
+        });
+
+      if (saveError) {
+        throw new Error(
+          "Gagal menyimpan profil bisnis: " + saveError.message
+        );
+      }
+
       setForm((prev) => ({
         ...prev,
         logo_url: logoUrl,
@@ -192,47 +196,73 @@ function Profile() {
       setLogoFile(null);
       setLogoPreview("");
       setSuccess("Profil bisnis berhasil disimpan.");
+    } catch (err) {
+      setError(err.message || "Terjadi kesalahan saat menyimpan profil.");
+    } finally {
+      setSaving(false);
     }
-
-    setSaving(false);
   }
 
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-3xl min-w-0">
-        <h2 className="text-xl font-bold text-white sm:text-2xl">
-          Profil Bisnis
-        </h2>
-
-        <p className="mt-2 text-sm text-slate-300">
-          Kelola identitas dan informasi bisnis Anda.
-        </p>
-
-        {error && (
-          <p className="mt-4 break-words rounded-lg bg-red-500/10 p-3 text-sm text-red-400">
-            {error}
+      <div className="mx-auto min-w-0 max-w-3xl space-y-6">
+        {/* HEADER */}
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#C9A96E]">
+            Business Settings
           </p>
+
+          <h1 className="mt-2 text-xl font-bold tracking-tight text-[#F5F1E8] sm:text-2xl">
+            Profil Bisnis
+          </h1>
+
+          <p className="mt-2 text-sm text-[#A79B86]">
+            Kelola identitas dan informasi bisnis Anda.
+          </p>
+        </div>
+
+        {/* PESAN */}
+        {error && (
+          <div className="break-words rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
+            {error}
+          </div>
         )}
 
         {success && (
-          <p className="mt-4 break-words rounded-lg bg-green-500/10 p-3 text-sm text-green-400">
+          <div className="break-words rounded-lg border border-[#C9A96E]/30 bg-[#C9A96E]/10 p-4 text-sm text-[#D8B982]">
             {success}
-          </p>
+          </div>
         )}
 
         {loading ? (
-          <div className="mt-5 rounded-lg border border-slate-800 bg-slate-950 p-5 text-slate-300">
+          <div className="rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-6 text-sm text-[#A79B86]">
             Memuat profil bisnis...
           </div>
         ) : (
           <form
             onSubmit={handleSubmit}
-            className="mt-5 space-y-5 rounded-lg border border-slate-800 bg-slate-950 p-4 sm:p-6"
+            className="space-y-6 rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-4 shadow-lg sm:p-6"
           >
+            <div className="border-b border-[#C9A96E]/15 pb-4">
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#C9A96E]">
+                Business Identity
+              </p>
+
+              <h2 className="mt-1 text-lg font-semibold text-[#F5F1E8]">
+                Informasi Bisnis
+              </h2>
+
+              <p className="mt-1 text-sm text-[#A79B86]">
+                Lengkapi informasi identitas bisnis Anda.
+              </p>
+            </div>
+
+            {/* NAMA BISNIS */}
             <div>
-              <label className="mb-2 block text-sm text-slate-300">
+              <label className="mb-2 block text-sm font-medium text-[#D8CEBD]">
                 Nama Bisnis *
               </label>
+
               <input
                 type="text"
                 name="business_name"
@@ -244,10 +274,12 @@ function Profile() {
               />
             </div>
 
+            {/* TELEPON */}
             <div>
-              <label className="mb-2 block text-sm text-slate-300">
+              <label className="mb-2 block text-sm font-medium text-[#D8CEBD]">
                 Nomor Telepon
               </label>
+
               <input
                 type="tel"
                 name="phone"
@@ -258,10 +290,12 @@ function Profile() {
               />
             </div>
 
+            {/* EMAIL */}
             <div>
-              <label className="mb-2 block text-sm text-slate-300">
+              <label className="mb-2 block text-sm font-medium text-[#D8CEBD]">
                 Email Bisnis
               </label>
+
               <input
                 type="email"
                 name="email"
@@ -272,10 +306,12 @@ function Profile() {
               />
             </div>
 
+            {/* ALAMAT */}
             <div>
-              <label className="mb-2 block text-sm text-slate-300">
+              <label className="mb-2 block text-sm font-medium text-[#D8CEBD]">
                 Alamat Bisnis
               </label>
+
               <textarea
                 name="address"
                 value={form.address}
@@ -286,44 +322,61 @@ function Profile() {
               />
             </div>
 
-            <div>
-              <label className="mb-2 block text-sm text-slate-300">
-                Logo Bisnis
-              </label>
-
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                onChange={handleLogoChange}
-                className={`${inputClass} file:mr-3 file:rounded-md file:border-0 file:bg-blue-600 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white`}
-              />
-
-              <p className="mt-2 text-xs text-slate-400">
-                Format PNG, JPG, atau WEBP. Ukuran maksimal 2 MB.
+            {/* LOGO */}
+            <div className="border-t border-[#C9A96E]/15 pt-5">
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#C9A96E]">
+                Brand Identity
               </p>
+
+              <h3 className="mt-1 text-base font-semibold text-[#F5F1E8]">
+                Logo Bisnis
+              </h3>
+
+              <p className="mt-1 text-sm text-[#A79B86]">
+                Unggah logo untuk identitas bisnis Anda.
+              </p>
+
+              <div className="mt-4">
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleLogoChange}
+                  className={`${inputClass} file:mr-3 file:rounded-md file:border-0 file:bg-[#C9A96E] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[#17130D]`}
+                />
+
+                <p className="mt-2 text-xs text-[#8C8170]">
+                  Format PNG, JPG, atau WEBP. Ukuran maksimal 2 MB.
+                </p>
+              </div>
             </div>
 
+            {/* PRATINJAU LOGO */}
             {(logoPreview || form.logo_url) && (
-              <div>
-                <p className="mb-2 text-sm text-slate-300">
+              <div className="rounded-xl border border-[#C9A96E]/20 bg-[#171717] p-4">
+                <p className="mb-3 text-sm font-medium text-[#D8CEBD]">
                   Pratinjau Logo
                 </p>
 
-                <img
-                  src={logoPreview || form.logo_url}
-                  alt="Pratinjau logo bisnis"
-                  className="h-24 w-24 rounded-lg border border-slate-700 bg-white object-contain p-2"
-                />
+                <div className="flex min-h-32 items-center justify-center rounded-lg border border-[#C9A96E]/10 bg-[#F5F1E8] p-4">
+                  <img
+                    src={logoPreview || form.logo_url}
+                    alt="Pratinjau logo bisnis"
+                    className="h-24 w-24 object-contain"
+                  />
+                </div>
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50 sm:w-auto"
-            >
-              {saving ? "Menyimpan..." : "Simpan Profil Bisnis"}
-            </button>
+            {/* SIMPAN */}
+            <div className="border-t border-[#C9A96E]/15 pt-5">
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full rounded-lg bg-[#C9A96E] px-5 py-3 text-sm font-semibold text-[#17130D] transition hover:bg-[#D8B982] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+              >
+                {saving ? "Menyimpan..." : "Simpan Profil Bisnis"}
+              </button>
+            </div>
           </form>
         )}
       </div>

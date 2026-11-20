@@ -12,7 +12,7 @@ const emptyForm = {
 };
 
 const inputClass =
-  "w-full min-w-0 rounded-lg border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-white outline-none focus:border-sky-500";
+  "w-full min-w-0 rounded-lg border border-[#C9A96E]/25 bg-[#171717] px-3 py-3 text-sm text-[#F5F1E8] outline-none transition placeholder:text-[#817765] focus:border-[#C9A96E] focus:ring-1 focus:ring-[#C9A96E]/30";
 
 function Customers() {
   const [customers, setCustomers] = useState([]);
@@ -68,7 +68,6 @@ function Customers() {
       setCustomers(customerResult.data || []);
       setOrders(orderResult.data || []);
 
-      // Perbarui detail pelanggan yang sedang dibuka
       if (selectedCustomer) {
         const updatedCustomer = (customerResult.data || []).find(
           (customer) => customer.id === selectedCustomer.id
@@ -278,71 +277,94 @@ function Customers() {
     0
   );
 
+  const statCards = [
+    {
+      title: "Total Pelanggan",
+      value: loading ? "..." : totalCustomers,
+      note: "Pelanggan terdaftar",
+    },
+    {
+      title: "Total Transaksi",
+      value: loading ? "..." : totalTransactions,
+      note: "Semua pesanan",
+    },
+    {
+      title: "Total Belanja",
+      value: loading ? "..." : formatRupiah(totalSpending),
+      note: "Akumulasi seluruh pesanan",
+    },
+  ];
+
   return (
     <DashboardLayout>
       <div className="min-w-0">
-        <h2 className="text-xl font-bold text-white sm:text-2xl">
-          Manajemen Pelanggan
-        </h2>
+        {/* HEADER */}
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#C9A96E]">
+            Business Management
+          </p>
 
-        <p className="mt-2 text-sm text-slate-300 sm:text-base">
-          Kelola dan pantau aktivitas pelanggan MasMuns.
-        </p>
+          <h2 className="mt-2 text-xl font-bold tracking-tight text-[#F5F1E8] sm:text-2xl">
+            Manajemen Pelanggan
+          </h2>
+
+          <p className="mt-2 text-sm text-[#A79B86] sm:text-base">
+            Kelola dan pantau aktivitas pelanggan MasMuns.
+          </p>
+        </div>
 
         {/* PESAN ERROR DAN SUKSES */}
         {error && (
-          <p className="mt-4 break-words rounded-lg bg-red-500/10 px-3 py-3 text-sm text-red-400">
+          <p className="mt-4 break-words rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-3 text-sm text-red-400">
             {error}
           </p>
         )}
 
         {success && (
-          <p className="mt-4 break-words rounded-lg bg-emerald-500/10 px-3 py-3 text-sm text-emerald-400">
+          <p className="mt-4 break-words rounded-lg border border-[#C9A96E]/25 bg-[#C9A96E]/10 px-3 py-3 text-sm text-[#DCC18E]">
             {success}
           </p>
         )}
 
         {/* STATISTIK */}
-        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 sm:p-5">
-            <p className="text-sm text-slate-400">Total Pelanggan</p>
-            <h3 className="mt-2 text-2xl font-bold text-white">
-              {loading ? "..." : totalCustomers}
-            </h3>
-            <p className="mt-1 text-xs text-slate-500">
-              Pelanggan terdaftar
-            </p>
-          </div>
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {statCards.map((item) => (
+            <div
+              key={item.title}
+              className="group relative min-w-0 overflow-hidden rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-4 shadow-lg transition hover:border-[#C9A96E]/50 sm:p-5"
+            >
+              <div className="absolute left-0 top-0 h-full w-1 bg-[#C9A96E]/70" />
 
-          <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 sm:p-5">
-            <p className="text-sm text-slate-400">Total Transaksi</p>
-            <h3 className="mt-2 text-2xl font-bold text-white">
-              {loading ? "..." : totalTransactions}
-            </h3>
-            <p className="mt-1 text-xs text-slate-500">
-              Semua pesanan
-            </p>
-          </div>
+              <div className="pl-2">
+                <p className="text-sm text-[#A79B86]">
+                  {item.title}
+                </p>
 
-          <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 sm:col-span-2 sm:p-5 xl:col-span-1">
-            <p className="text-sm text-slate-400">Total Belanja</p>
-            <h3 className="mt-2 break-words text-xl font-bold text-sky-400">
-              {loading ? "..." : formatRupiah(totalSpending)}
-            </h3>
-            <p className="mt-1 text-xs text-slate-500">
-              Akumulasi seluruh pesanan
-            </p>
-          </div>
+                <h3 className="mt-2 break-words text-xl font-bold text-[#F5F1E8] sm:text-2xl">
+                  {item.value}
+                </h3>
+
+                <p className="mt-1 text-xs text-[#8C8170]">
+                  {item.note}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* DAFTAR PELANGGAN */}
-        <div className="mt-6 rounded-xl border border-slate-800 bg-slate-950 p-4 sm:p-5">
+        <div className="mt-6 rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-4 shadow-lg sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-white">
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#C9A96E]">
+                Customer Directory
+              </p>
+
+              <h3 className="mt-1 text-lg font-semibold text-[#F5F1E8]">
                 Daftar Pelanggan
               </h3>
-              <p className="mt-1 text-sm text-slate-400">
+
+              <p className="mt-1 text-sm text-[#A79B86]">
                 Klik nama untuk melihat riwayat transaksi.
               </p>
             </div>
@@ -350,7 +372,7 @@ function Customers() {
             <button
               type="button"
               onClick={openAddForm}
-              className="w-full rounded-lg bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-500 sm:w-auto"
+              className="w-full rounded-lg bg-[#C9A96E] px-4 py-3 text-sm font-semibold text-[#17130D] transition hover:bg-[#D8B982] sm:w-auto"
             >
               + Tambah Pelanggan
             </button>
@@ -360,13 +382,19 @@ function Customers() {
           {showForm && (
             <form
               onSubmit={handleSubmit}
-              className="mt-5 rounded-lg border border-slate-800 bg-slate-900 p-4 sm:p-5"
+              className="mt-5 rounded-xl border border-[#C9A96E]/20 bg-[#181818] p-4 sm:p-5"
             >
-              <h4 className="mb-4 font-semibold text-white">
-                {editingCustomer
-                  ? "Edit Pelanggan"
-                  : "Form Tambah Pelanggan"}
-              </h4>
+              <div className="mb-4">
+                <p className="text-xs font-semibold uppercase tracking-widest text-[#C9A96E]">
+                  Customer Information
+                </p>
+
+                <h4 className="mt-1 font-semibold text-[#F5F1E8]">
+                  {editingCustomer
+                    ? "Edit Pelanggan"
+                    : "Form Tambah Pelanggan"}
+                </h4>
+              </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {[
@@ -394,7 +422,7 @@ function Customers() {
                   },
                 ].map((field) => (
                   <div key={field.key}>
-                    <label className="mb-2 block text-sm text-slate-300">
+                    <label className="mb-2 block text-sm text-[#C8BDAA]">
                       {field.label}
                       {field.required ? " *" : ""}
                     </label>
@@ -420,7 +448,7 @@ function Customers() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="w-full rounded-lg bg-emerald-600 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50 sm:w-auto"
+                  className="w-full rounded-lg bg-[#C9A96E] px-5 py-3 text-sm font-semibold text-[#17130D] transition hover:bg-[#D8B982] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                 >
                   {saving
                     ? "Menyimpan..."
@@ -436,7 +464,7 @@ function Customers() {
                     setEditingCustomer(null);
                     setForm(emptyForm);
                   }}
-                  className="w-full rounded-lg border border-slate-700 px-5 py-3 text-sm text-slate-300 hover:bg-slate-800 sm:w-auto"
+                  className="w-full rounded-lg border border-[#C9A96E]/30 px-5 py-3 text-sm text-[#D8C9AD] transition hover:bg-[#292929] sm:w-auto"
                 >
                   Batal
                 </button>
@@ -457,28 +485,28 @@ function Customers() {
 
           {/* TABEL PELANGGAN */}
           {loading ? (
-            <p className="py-10 text-center text-slate-400">
+            <p className="py-10 text-center text-[#A79B86]">
               Memuat data pelanggan...
             </p>
           ) : filteredCustomers.length === 0 ? (
-            <p className="py-10 text-center text-slate-400">
+            <p className="py-10 text-center text-[#A79B86]">
               Tidak ada pelanggan ditemukan.
             </p>
           ) : (
-            <div className="mt-5 overflow-x-auto rounded-lg border border-slate-800">
+            <div className="mt-5 overflow-x-auto rounded-xl border border-[#C9A96E]/15">
               <table className="w-full min-w-[1050px] text-left text-sm">
-                <thead className="border-b border-slate-800 bg-slate-900 text-slate-400">
+                <thead className="border-b border-[#C9A96E]/15 bg-[#181818] text-xs uppercase tracking-wider text-[#C9A96E]">
                   <tr>
-                    <th className="px-4 py-3">Nama Pelanggan</th>
-                    <th className="px-4 py-3">Telepon</th>
-                    <th className="px-4 py-3">Total Transaksi</th>
-                    <th className="px-4 py-3">Total Belanja</th>
-                    <th className="px-4 py-3">Pesanan Terakhir</th>
-                    <th className="px-4 py-3">Aksi</th>
+                    <th className="px-4 py-4">Nama Pelanggan</th>
+                    <th className="px-4 py-4">Telepon</th>
+                    <th className="px-4 py-4">Total Transaksi</th>
+                    <th className="px-4 py-4">Total Belanja</th>
+                    <th className="px-4 py-4">Pesanan Terakhir</th>
+                    <th className="px-4 py-4">Aksi</th>
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-slate-800 text-slate-300">
+                <tbody className="divide-y divide-[#C9A96E]/10 text-[#C8BDAA]">
                   {filteredCustomers.map((customer) => {
                     const customerOrders = getCustomerOrders(customer);
 
@@ -493,19 +521,19 @@ function Customers() {
                     return (
                       <tr
                         key={customer.id}
-                        className="hover:bg-slate-900"
+                        className="transition hover:bg-[#292929]"
                       >
                         <td className="px-4 py-4">
                           <button
                             type="button"
                             onClick={() => setSelectedCustomer(customer)}
-                            className="font-semibold text-sky-400 hover:underline"
+                            className="font-semibold text-[#D8B982] transition hover:text-[#F5F1E8] hover:underline"
                           >
                             {customer.name}
                           </button>
 
                           {customer.email && (
-                            <p className="mt-1 text-xs text-slate-500">
+                            <p className="mt-1 text-xs text-[#8C8170]">
                               {customer.email}
                             </p>
                           )}
@@ -519,7 +547,7 @@ function Customers() {
                           {customerOrders.length} pesanan
                         </td>
 
-                        <td className="px-4 py-4 font-medium text-sky-400">
+                        <td className="whitespace-nowrap px-4 py-4 font-medium text-[#D8B982]">
                           {formatRupiah(spending)}
                         </td>
 
@@ -534,7 +562,7 @@ function Customers() {
                             <button
                               type="button"
                               onClick={() => openEditForm(customer)}
-                              className="rounded-lg bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-400 hover:bg-amber-500/20"
+                              className="rounded-lg border border-[#C9A96E]/40 px-3 py-2 text-xs font-medium text-[#D8B982] transition hover:bg-[#C9A96E] hover:text-[#17130D]"
                             >
                               Edit
                             </button>
@@ -542,7 +570,7 @@ function Customers() {
                             <button
                               type="button"
                               onClick={() => handleDeleteCustomer(customer)}
-                              className="rounded-lg bg-red-500/10 px-4 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/20"
+                              className="rounded-lg border border-red-500/30 px-3 py-2 text-xs font-medium text-red-400 transition hover:bg-red-500/10"
                             >
                               Hapus
                             </button>
@@ -556,37 +584,37 @@ function Customers() {
             </div>
           )}
 
-          <p className="mt-4 text-xs text-slate-500">
+          <p className="mt-4 text-xs text-[#8C8170]">
             Menampilkan {filteredCustomers.length} dari {totalCustomers} pelanggan.
           </p>
 
-          <p className="mt-2 text-xs text-slate-500 sm:hidden">
+          <p className="mt-2 text-xs text-[#8C8170] sm:hidden">
             Geser tabel ke kiri atau kanan untuk melihat seluruh kolom.
           </p>
         </div>
 
         {/* DETAIL DAN RIWAYAT PELANGGAN */}
         {selectedCustomer && (
-          <div className="mt-6 rounded-xl border border-sky-800 bg-slate-950 p-4 sm:p-5">
+          <div className="mt-6 rounded-xl border border-[#C9A96E]/30 bg-[#202020] p-4 shadow-lg sm:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <p className="text-sm text-slate-400">
-                  Detail Riwayat Pelanggan
+                <p className="text-xs font-semibold uppercase tracking-widest text-[#C9A96E]">
+                  Customer Details
                 </p>
 
-                <h3 className="mt-1 break-words text-xl font-bold text-white">
+                <h3 className="mt-2 break-words text-xl font-bold text-[#F5F1E8]">
                   {selectedCustomer.name}
                 </h3>
 
-                <p className="mt-1 break-words text-sm text-slate-400">
+                <p className="mt-2 break-words text-sm text-[#A79B86]">
                   {selectedCustomer.phone || "Tidak ada nomor telepon"}
                 </p>
 
-                <p className="break-words text-sm text-slate-400">
+                <p className="break-words text-sm text-[#A79B86]">
                   {selectedCustomer.email || "Tidak ada email"}
                 </p>
 
-                <p className="break-words text-sm text-slate-400">
+                <p className="break-words text-sm text-[#A79B86]">
                   {selectedCustomer.address || "Tidak ada alamat"}
                 </p>
               </div>
@@ -594,44 +622,46 @@ function Customers() {
               <button
                 type="button"
                 onClick={() => setSelectedCustomer(null)}
-                className="w-full rounded-lg border border-slate-700 px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 sm:w-auto"
+                className="w-full rounded-lg border border-[#C9A96E]/30 px-4 py-3 text-sm text-[#D8C9AD] transition hover:bg-[#292929] sm:w-auto"
               >
                 Tutup Detail
               </button>
             </div>
 
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="rounded-lg bg-slate-900 p-4">
-                <p className="text-sm text-slate-400">
+              <div className="rounded-xl border border-[#C9A96E]/15 bg-[#181818] p-4">
+                <p className="text-sm text-[#A79B86]">
                   Total Transaksi
                 </p>
-                <p className="mt-2 text-2xl font-bold text-white">
+
+                <p className="mt-2 text-2xl font-bold text-[#F5F1E8]">
                   {selectedOrders.length}
                 </p>
               </div>
 
-              <div className="rounded-lg bg-slate-900 p-4">
-                <p className="text-sm text-slate-400">
+              <div className="rounded-xl border border-[#C9A96E]/15 bg-[#181818] p-4">
+                <p className="text-sm text-[#A79B86]">
                   Total Belanja
                 </p>
-                <p className="mt-2 break-words text-xl font-bold text-sky-400">
+
+                <p className="mt-2 break-words text-xl font-bold text-[#D8B982]">
                   {formatRupiah(selectedTotal)}
                 </p>
               </div>
             </div>
 
-            <h4 className="mb-3 mt-6 font-semibold text-white">
+            <h4 className="mb-3 mt-6 font-semibold text-[#F5F1E8]">
               Riwayat Transaksi
             </h4>
 
             {selectedOrders.length === 0 ? (
-              <p className="py-5 text-center text-sm text-slate-400">
+              <p className="py-5 text-center text-sm text-[#A79B86]">
                 Belum ada transaksi untuk pelanggan ini.
               </p>
             ) : (
-              <div className="overflow-x-auto rounded-lg border border-slate-800">
+              <div className="overflow-x-auto rounded-xl border border-[#C9A96E]/15">
                 <table className="w-full min-w-[550px] text-left text-sm">
-                  <thead className="border-b border-slate-800 bg-slate-900 text-slate-400">
+                  <thead className="border-b border-[#C9A96E]/15 bg-[#181818] text-xs uppercase tracking-wider text-[#C9A96E]">
                     <tr>
                       <th className="px-4 py-3">Tanggal</th>
                       <th className="px-4 py-3">Nominal</th>
@@ -639,14 +669,14 @@ function Customers() {
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-slate-800 text-slate-300">
+                  <tbody className="divide-y divide-[#C9A96E]/10 text-[#C8BDAA]">
                     {selectedOrders.map((order) => (
                       <tr key={order.id}>
                         <td className="px-4 py-4">
                           {new Date(order.created_at).toLocaleDateString("id-ID")}
                         </td>
 
-                        <td className="px-4 py-4 font-medium text-white">
+                        <td className="px-4 py-4 font-medium text-[#F5F1E8]">
                           {formatRupiah(Number(order.amount || 0))}
                         </td>
 
@@ -654,8 +684,8 @@ function Customers() {
                           <span
                             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium ${
                               order.status === "selesai"
-                                ? "bg-emerald-500/10 text-emerald-400"
-                                : "bg-amber-500/10 text-amber-400"
+                                ? "border border-[#C9A96E]/25 bg-[#C9A96E]/10 text-[#D8B982]"
+                                : "border border-amber-500/20 bg-amber-500/10 text-amber-400"
                             }`}
                           >
                             {order.status || "Belum ada status"}
@@ -668,7 +698,7 @@ function Customers() {
               </div>
             )}
 
-            <p className="mt-2 text-xs text-slate-500 sm:hidden">
+            <p className="mt-2 text-xs text-[#8C8170] sm:hidden">
               Geser tabel riwayat ke kiri atau kanan jika diperlukan.
             </p>
           </div>

@@ -69,43 +69,40 @@ function exportToPDF(orders, periode) {
 
   const totalPesanan = orders.length;
 
-  // Total pendapatan hanya menghitung pesanan selesai
-const totalPendapatan = orders
-  .filter((order) => order.status === "selesai")
-  .reduce(
-    (total, order) => total + Number(order.amount || 0),
-    0
-  );
+  // Pendapatan PDF hanya menghitung pesanan selesai
+  const totalPendapatan = orders
+    .filter((order) => order.status === "selesai")
+    .reduce(
+      (total, order) => total + Number(order.amount || 0),
+      0
+    );
 
- console.log("DEBUG PDF:", {
-  pesanan: orders.map((order) => ({
-    status: order.status,
-    jumlah: order.amount,
-  })),
-  totalPendapatan,
-});
-
-  // HEADER LAPORAN
-  doc.setFillColor(15, 23, 42);
+  // Header Luxury Black & Gold
+  doc.setFillColor(17, 17, 17);
   doc.rect(0, 0, lebarHalaman, 48, "F");
 
-  doc.setTextColor(255, 255, 255);
+  doc.setFillColor(201, 169, 110);
+  doc.rect(0, 46, lebarHalaman, 2, "F");
+
+  doc.setTextColor(201, 169, 110);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(22);
   doc.text("MasMuns", 14, 20);
 
+  doc.setTextColor(245, 241, 232);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.text("LAPORAN TRANSAKSI PESANAN", 14, 29);
 
+  doc.setFontSize(9);
   doc.text(
     `Periode: ${namaPeriode[periode] || "Semua Data"}`,
     14,
     38
   );
 
-  // TANGGAL CETAK
-  doc.setTextColor(51, 65, 85);
+  // Tanggal cetak
+  doc.setTextColor(90, 90, 90);
   doc.setFontSize(9);
 
   doc.text(
@@ -115,10 +112,10 @@ const totalPendapatan = orders
     { align: "right" }
   );
 
-  // KOTAK RINGKASAN
+  // Kotak ringkasan
   const lebarKotak = (lebarHalaman - 38) / 2;
 
-  doc.setFillColor(241, 245, 249);
+  doc.setFillColor(245, 241, 232);
 
   doc.roundedRect(
     14,
@@ -140,7 +137,7 @@ const totalPendapatan = orders
     "F"
   );
 
-  doc.setTextColor(71, 85, 105);
+  doc.setTextColor(120, 105, 80);
   doc.setFontSize(9);
 
   doc.text("TOTAL PESANAN", 19, 74);
@@ -150,7 +147,7 @@ const totalPendapatan = orders
     74
   );
 
-  doc.setTextColor(15, 23, 42);
+  doc.setTextColor(17, 17, 17);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
 
@@ -162,14 +159,14 @@ const totalPendapatan = orders
     82
   );
 
-  // JUDUL TABEL
+  // Judul tabel
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
-  doc.setTextColor(15, 23, 42);
+  doc.setTextColor(17, 17, 17);
 
   doc.text("Rincian Transaksi", 14, 101);
 
-  // TABEL TRANSAKSI
+  // Tabel transaksi
   autoTable(doc, {
     startY: 106,
 
@@ -197,20 +194,20 @@ const totalPendapatan = orders
       font: "helvetica",
       fontSize: 9,
       cellPadding: 3,
-      textColor: [51, 65, 85],
-      lineColor: [226, 232, 240],
+      textColor: [55, 55, 55],
+      lineColor: [220, 210, 190],
       lineWidth: 0.2,
     },
 
     headStyles: {
-      fillColor: [30, 41, 59],
-      textColor: [255, 255, 255],
+      fillColor: [201, 169, 110],
+      textColor: [17, 17, 17],
       fontStyle: "bold",
       halign: "center",
     },
 
     alternateRowStyles: {
-      fillColor: [248, 250, 252],
+      fillColor: [248, 245, 238],
     },
 
     columnStyles: {
@@ -222,7 +219,7 @@ const totalPendapatan = orders
     },
   });
 
-  // NOMOR HALAMAN
+  // Nomor halaman
   const jumlahHalaman = doc.internal.getNumberOfPages();
 
   for (let halaman = 1; halaman <= jumlahHalaman; halaman++) {
@@ -230,7 +227,7 @@ const totalPendapatan = orders
 
     const tinggiHalaman = doc.internal.pageSize.getHeight();
 
-    doc.setDrawColor(203, 213, 225);
+    doc.setDrawColor(201, 169, 110);
 
     doc.line(
       14,
@@ -241,7 +238,7 @@ const totalPendapatan = orders
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.setTextColor(100, 116, 139);
+    doc.setTextColor(120, 105, 80);
 
     doc.text(
       "MasMuns - Laporan Pesanan",
@@ -257,7 +254,6 @@ const totalPendapatan = orders
     );
   }
 
-  // SIMPAN PDF
   doc.save("Laporan-Pesanan.pdf");
 }
 
@@ -360,64 +356,66 @@ function Dashboard() {
   }, [loadOrders, loadProducts, loadExpenses]);
 
   // Mengubah status pesanan sekaligus mengatur stok
-async function handleToggleStatus(order) {
-  if (!user?.id) {
-    setError("Silakan login kembali.");
-    return;
-  }
-
-  const statusBaru =
-    order.status === "selesai" ? "pending" : "selesai";
-
-  const { error } = await supabase.rpc("set_order_status", {
-    p_order_id: order.id,
-    p_new_status: statusBaru,
-  });
-
-  if (error) {
-    setError("Gagal mengubah status: " + error.message);
-    return;
-  }
-
-  setError("");
-
-  await Promise.all([
-    loadOrders(),
-    loadProducts(),
-  ]);
-}
-  // Menghapus pesanan sekaligus mengatur stok
-async function handleDelete(order) {
-  if (!user?.id) {
-    setError("Silakan login kembali.");
-    return;
-  }
-
-  const yakin = window.confirm(
-    `Hapus pesanan atas nama ${order.customer_name}?`
-  );
-
-  if (!yakin) return;
-
-  const { error } = await supabase.rpc(
-    "delete_order_with_stock",
-    {
-      p_order_id: order.id,
+  async function handleToggleStatus(order) {
+    if (!user?.id) {
+      setError("Silakan login kembali.");
+      return;
     }
-  );
 
-  if (error) {
-    setError("Gagal menghapus pesanan: " + error.message);
-    return;
+    const statusBaru =
+      order.status === "selesai" ? "pending" : "selesai";
+
+    const { error } = await supabase.rpc("set_order_status", {
+      p_order_id: order.id,
+      p_new_status: statusBaru,
+    });
+
+    if (error) {
+      setError("Gagal mengubah status: " + error.message);
+      return;
+    }
+
+    setError("");
+
+    await Promise.all([
+      loadOrders(),
+      loadProducts(),
+    ]);
   }
 
-  setError("");
+  // Menghapus pesanan sekaligus mengatur stok
+  async function handleDelete(order) {
+    if (!user?.id) {
+      setError("Silakan login kembali.");
+      return;
+    }
 
-  await Promise.all([
-    loadOrders(),
-    loadProducts(),
-  ]);
-}
+    const yakin = window.confirm(
+      `Hapus pesanan atas nama ${order.customer_name}?`
+    );
+
+    if (!yakin) return;
+
+    const { error } = await supabase.rpc(
+      "delete_order_with_stock",
+      {
+        p_order_id: order.id,
+      }
+    );
+
+    if (error) {
+      setError("Gagal menghapus pesanan: " + error.message);
+      return;
+    }
+
+    setError("");
+
+    await Promise.all([
+      loadOrders(),
+      loadProducts(),
+    ]);
+  }
+
   // Statistik pesanan
   const total = orders.length;
 
@@ -425,6 +423,7 @@ async function handleDelete(order) {
     (order) => order.status === "selesai"
   ).length;
 
+  // Total pendapatan semua pesanan
   const pendapatan = orders.reduce(
     (jumlah, order) =>
       jumlah + Number(order.amount || 0),
@@ -577,16 +576,29 @@ async function handleDelete(order) {
 
   return (
     <DashboardLayout>
-      <h2 className="text-2xl font-bold text-white">
-        Selamat datang
-      </h2>
+      {/* Header Dashboard */}
+      <div className="mb-7">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="h-px w-8 bg-[#C9A96E]" />
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#C9A96E]">
+            Business Overview
+          </p>
+        </div>
 
-      <p className="mt-1 text-slate-300">
-        Login sebagai {user?.email}
-      </p>
+        <h2 className="mt-3 text-2xl font-bold tracking-wide text-[#F5F1E8] sm:text-3xl">
+          Selamat Datang
+        </h2>
+
+        <p className="mt-2 text-sm text-[#A79B86]">
+          Login sebagai{" "}
+          <span className="font-medium text-[#C9A96E]">
+            {user?.email}
+          </span>
+        </p>
+      </div>
 
       {error && (
-        <p className="mt-4 rounded bg-red-500/10 px-3 py-2 text-sm text-red-400">
+        <p className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {error}
         </p>
       )}
@@ -615,9 +627,12 @@ async function handleDelete(order) {
       </div>
 
       {/* Ringkasan Keuangan */}
-      <h3 className="mb-3 mt-8 text-lg font-semibold text-white">
-        Ringkasan Keuangan
-      </h3>
+      <div className="mb-3 mt-9 flex items-center gap-3">
+        <span className="h-6 w-1 rounded-full bg-[#C9A96E]" />
+        <h3 className="text-lg font-semibold text-[#F5F1E8]">
+          Ringkasan Keuangan
+        </h3>
+      </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
         <StatCard
@@ -652,9 +667,12 @@ async function handleDelete(order) {
       </div>
 
       {/* Statistik Produk */}
-      <h3 className="mb-3 mt-8 text-lg font-semibold text-white">
-        Ringkasan Produk
-      </h3>
+      <div className="mb-3 mt-9 flex items-center gap-3">
+        <span className="h-6 w-1 rounded-full bg-[#C9A96E]" />
+        <h3 className="text-lg font-semibold text-[#F5F1E8]">
+          Ringkasan Produk
+        </h3>
+      </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
         <StatCard
@@ -681,15 +699,18 @@ async function handleDelete(order) {
       </div>
 
       {/* Filter Periode Grafik dan Export */}
-      <div className="mt-8 rounded-xl border border-slate-800 bg-slate-950 p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-9 rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-4 shadow-lg sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-white">
-              Analisis Penjualan
-            </h3>
+            <div className="flex items-center gap-2">
+              <span className="h-5 w-1 rounded-full bg-[#C9A96E]" />
+              <h3 className="text-lg font-semibold text-[#F5F1E8]">
+                Analisis Penjualan
+              </h3>
+            </div>
 
-            <p className="mt-1 text-sm text-slate-400">
-              Pilih periode untuk melihat perkembangan bisnis
+            <p className="mt-2 text-sm text-[#8C8170]">
+              Pilih periode untuk melihat perkembangan bisnis.
             </p>
           </div>
 
@@ -697,7 +718,7 @@ async function handleDelete(order) {
             <select
               value={periode}
               onChange={(e) => setPeriode(e.target.value)}
-              className="rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-white outline-none focus:border-sky-500"
+              className="rounded-lg border border-[#C9A96E]/25 bg-[#171717] px-4 py-2.5 text-sm text-[#F5F1E8] outline-none focus:border-[#C9A96E]"
             >
               <option value="hariini">Hari Ini</option>
               <option value="7hari">7 Hari Terakhir</option>
@@ -710,7 +731,7 @@ async function handleDelete(order) {
               disabled={
                 loading || filteredChartOrders.length === 0
               }
-              className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg border border-[#C9A96E]/50 bg-[#C9A96E]/10 px-4 py-2.5 text-sm font-semibold text-[#D9BB83] transition hover:bg-[#C9A96E] hover:text-[#111111] disabled:cursor-not-allowed disabled:opacity-40"
             >
               Export Excel
             </button>
@@ -722,41 +743,44 @@ async function handleDelete(order) {
               disabled={
                 loading || filteredChartOrders.length === 0
               }
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg bg-[#C9A96E] px-4 py-2.5 text-sm font-semibold text-[#111111] transition hover:bg-[#D9BB83] disabled:cursor-not-allowed disabled:opacity-40"
             >
               Export PDF
             </button>
           </div>
         </div>
 
-        <p className="mt-3 text-xs text-slate-400">
+        <p className="mt-4 text-xs text-[#8C8170]">
           Menampilkan {filteredChartOrders.length} dari {total} pesanan
           sesuai periode yang dipilih.
         </p>
       </div>
 
       {/* Grafik Pendapatan */}
-      <div className="mt-6 rounded-xl border border-slate-800 bg-slate-950 p-5">
+      <div className="mt-6 min-w-0 overflow-hidden rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-4 shadow-lg sm:p-5">
         <div className="mb-5">
-          <h3 className="text-lg font-semibold text-white">
-            Grafik Pendapatan
-          </h3>
+          <div className="flex items-center gap-2">
+            <span className="h-5 w-1 rounded-full bg-[#C9A96E]" />
+            <h3 className="text-lg font-semibold text-[#F5F1E8]">
+              Grafik Pendapatan
+            </h3>
+          </div>
 
-          <p className="mt-1 text-sm text-slate-400">
-            Pendapatan berdasarkan tanggal pesanan
+          <p className="mt-2 text-sm text-[#8C8170]">
+            Pendapatan berdasarkan tanggal pesanan.
           </p>
         </div>
 
         {loading ? (
-          <p className="py-12 text-center text-slate-400">
+          <p className="py-12 text-center text-[#A79B86]">
             Memuat grafik...
           </p>
         ) : salesChartData.length === 0 ? (
-          <p className="py-12 text-center text-slate-400">
+          <p className="py-12 text-center text-[#A79B86]">
             Belum ada data penjualan pada periode ini.
           </p>
         ) : (
-          <div className="h-72 w-full">
+          <div className="h-72 w-full min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={salesChartData}
@@ -769,18 +793,23 @@ async function handleDelete(order) {
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="#334155"
+                  stroke="#3A352D"
+                  vertical={false}
                 />
 
                 <XAxis
                   dataKey="tanggal"
-                  stroke="#94a3b8"
-                  tick={{ fontSize: 12 }}
+                  stroke="#8C8170"
+                  tick={{ fontSize: 10, fill: "#A79B86" }}
+                  axisLine={{ stroke: "#514735" }}
+                  tickLine={false}
+                  minTickGap={18}
+                  interval="preserveStartEnd"
                 />
 
                 <YAxis
-                  stroke="#94a3b8"
-                  tick={{ fontSize: 11 }}
+                  stroke="#8C8170"
+                  tick={{ fontSize: 11, fill: "#A79B86" }}
                   tickFormatter={(value) => {
                     if (value >= 1000000) {
                       return `Rp${(value / 1000000).toFixed(1)}jt`;
@@ -792,6 +821,8 @@ async function handleDelete(order) {
 
                     return `Rp${value}`;
                   }}
+                  axisLine={false}
+                  tickLine={false}
                   width={75}
                 />
 
@@ -801,25 +832,36 @@ async function handleDelete(order) {
                     "Pendapatan",
                   ]}
                   contentStyle={{
-                    backgroundColor: "#0f172a",
-                    border: "1px solid #334155",
-                    borderRadius: "8px",
-                    color: "#fff",
+                    backgroundColor: "#171717",
+                    border: "1px solid #C9A96E",
+                    borderRadius: "10px",
+                    color: "#F5F1E8",
+                    fontSize: "12px",
                   }}
-                  labelStyle={{ color: "#cbd5e1" }}
+                  labelStyle={{
+                    color: "#C9A96E",
+                    marginBottom: "5px",
+                  }}
                 />
 
                 <Line
                   type="monotone"
                   dataKey="pendapatan"
                   name="Pendapatan"
-                  stroke="#38bdf8"
+                  stroke="#C9A96E"
                   strokeWidth={3}
                   dot={{
                     r: 5,
-                    fill: "#38bdf8",
+                    fill: "#C9A96E",
+                    stroke: "#171717",
+                    strokeWidth: 2,
                   }}
-                  activeDot={{ r: 7 }}
+                  activeDot={{
+                    r: 7,
+                    fill: "#F5F1E8",
+                    stroke: "#C9A96E",
+                    strokeWidth: 2,
+                  }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -828,27 +870,30 @@ async function handleDelete(order) {
       </div>
 
       {/* Grafik Jumlah Pesanan */}
-      <div className="mt-8 rounded-xl border border-slate-800 bg-slate-950 p-5">
+      <div className="mt-7 min-w-0 overflow-hidden rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-4 shadow-lg sm:p-5">
         <div className="mb-5">
-          <h3 className="text-lg font-semibold text-white">
-            Grafik Jumlah Pesanan
-          </h3>
+          <div className="flex items-center gap-2">
+            <span className="h-5 w-1 rounded-full bg-[#C9A96E]" />
+            <h3 className="text-lg font-semibold text-[#F5F1E8]">
+              Grafik Jumlah Pesanan
+            </h3>
+          </div>
 
-          <p className="mt-1 text-sm text-slate-400">
-            Jumlah transaksi berdasarkan tanggal
+          <p className="mt-2 text-sm text-[#8C8170]">
+            Jumlah transaksi berdasarkan tanggal.
           </p>
         </div>
 
         {loading ? (
-          <p className="py-12 text-center text-slate-400">
+          <p className="py-12 text-center text-[#A79B86]">
             Memuat grafik...
           </p>
         ) : ordersChartData.length === 0 ? (
-          <p className="py-12 text-center text-slate-400">
+          <p className="py-12 text-center text-[#A79B86]">
             Belum ada data pesanan pada periode ini.
           </p>
         ) : (
-          <div className="h-72 w-full">
+          <div className="h-72 w-full min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={ordersChartData}
@@ -861,19 +906,26 @@ async function handleDelete(order) {
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="#334155"
+                  stroke="#3A352D"
+                  vertical={false}
                 />
 
                 <XAxis
                   dataKey="tanggal"
-                  stroke="#94a3b8"
-                  tick={{ fontSize: 12 }}
+                  stroke="#8C8170"
+                  tick={{ fontSize: 10, fill: "#A79B86" }}
+                  axisLine={{ stroke: "#514735" }}
+                  tickLine={false}
+                  minTickGap={18}
+                  interval="preserveStartEnd"
                 />
 
                 <YAxis
-                  stroke="#94a3b8"
+                  stroke="#8C8170"
                   allowDecimals={false}
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 12, fill: "#A79B86" }}
+                  axisLine={false}
+                  tickLine={false}
                 />
 
                 <Tooltip
@@ -882,19 +934,22 @@ async function handleDelete(order) {
                     "Jumlah Pesanan",
                   ]}
                   contentStyle={{
-                    backgroundColor: "#0f172a",
-                    border: "1px solid #334155",
-                    borderRadius: "8px",
-                    color: "#fff",
+                    backgroundColor: "#171717",
+                    border: "1px solid #C9A96E",
+                    borderRadius: "10px",
+                    color: "#F5F1E8",
                   }}
-                  labelStyle={{ color: "#cbd5e1" }}
+                  labelStyle={{
+                    color: "#C9A96E",
+                  }}
                 />
 
                 <Bar
                   dataKey="jumlah"
                   name="Jumlah Pesanan"
-                  fill="#38bdf8"
+                  fill="#C9A96E"
                   radius={[6, 6, 0, 0]}
+                  maxBarSize={55}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -905,19 +960,22 @@ async function handleDelete(order) {
       {/* Form Pesanan */}
       <div className="mt-8">
         <OrderForm
-  onAdded={async () => {
-    await Promise.all([
-      loadOrders(),
-      loadProducts(),
-    ]);
-  }}
-/>
+          onAdded={async () => {
+            await Promise.all([
+              loadOrders(),
+              loadProducts(),
+            ]);
+          }}
+        />
       </div>
 
       {/* Daftar Pesanan */}
-      <h3 className="mb-3 mt-8 text-lg font-semibold text-white">
-        Daftar Pesanan
-      </h3>
+      <div className="mb-4 mt-9 flex items-center gap-3">
+        <span className="h-6 w-1 rounded-full bg-[#C9A96E]" />
+        <h3 className="text-lg font-semibold text-[#F5F1E8]">
+          Daftar Pesanan
+        </h3>
+      </div>
 
       <OrderFilters
         search={search}
@@ -932,8 +990,8 @@ async function handleDelete(order) {
         onDelete={handleDelete}
       />
 
-      <p className="mt-2 text-xs text-slate-500">
-        Menampilkan {filteredOrders.length} dari {total} pesanan
+      <p className="mt-3 text-xs text-[#8C8170]">
+        Menampilkan {filteredOrders.length} dari {total} pesanan.
       </p>
     </DashboardLayout>
   );

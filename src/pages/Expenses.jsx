@@ -287,63 +287,105 @@ function Expenses() {
   }
 
   const inputClass =
-    "w-full min-w-0 rounded-lg border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-white outline-none focus:border-blue-500";
+    "w-full min-w-0 rounded-lg border border-[#C9A96E]/25 bg-[#171717] px-3 py-3 text-sm text-[#F5F1E8] outline-none transition placeholder:text-[#817766] focus:border-[#C9A96E] focus:ring-1 focus:ring-[#C9A96E]/25";
+
+  const cardClass =
+    "rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-4 shadow-lg sm:p-5";
 
   return (
     <DashboardLayout>
       <div className="min-w-0">
-        <h2 className="text-xl font-bold text-white sm:text-2xl">
-          Manajemen Pengeluaran
-        </h2>
+        {/* HEADER */}
+        <div>
+          <div className="flex items-center gap-3">
+            <span className="h-7 w-1 rounded-full bg-[#C9A96E]" />
+            <h2 className="text-xl font-bold tracking-wide text-[#F5F1E8] sm:text-2xl">
+              Manajemen Pengeluaran
+            </h2>
+          </div>
 
-        <p className="mt-2 text-sm text-slate-300 sm:text-base">
-          Catat dan pantau seluruh pengeluaran bisnis MasMuns.
-        </p>
+          <p className="mt-3 text-sm text-[#A79B86] sm:text-base">
+            Catat dan pantau seluruh pengeluaran bisnis MasMuns.
+          </p>
+        </div>
+
+        {/* PESAN */}
+        {error && (
+          <p className="mt-4 break-words rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+            {error}
+          </p>
+        )}
+
+        {success && (
+          <p className="mt-4 break-words rounded-lg border border-[#C9A96E]/20 bg-[#C9A96E]/10 px-4 py-3 text-sm text-[#D9BB83]">
+            {success}
+          </p>
+        )}
 
         {/* KARTU STATISTIK */}
-        <div className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-3">
-          <div className="rounded-lg border border-slate-800 bg-slate-950 p-3 sm:p-5">
-            <p className="text-xs text-slate-400 sm:text-sm">
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className={cardClass}>
+            <p className="text-sm font-medium text-[#A79B86]">
               Total Pengeluaran
             </p>
-            <h3 className="mt-2 break-words text-base font-bold text-white sm:text-2xl">
-              {formatRupiah(totalExpenses)}
+            <h3 className="mt-3 break-words text-xl font-bold text-[#E4C98F] sm:text-2xl">
+              {loading ? "..." : formatRupiah(totalExpenses)}
             </h3>
+            <p className="mt-2 text-xs text-[#817766]">
+              Akumulasi seluruh pengeluaran
+            </p>
           </div>
 
-          <div className="rounded-lg border border-slate-800 bg-slate-950 p-3 sm:p-5">
-            <p className="text-xs text-slate-400 sm:text-sm">
+          <div className={cardClass}>
+            <p className="text-sm font-medium text-[#A79B86]">
               Jumlah Transaksi
             </p>
-            <h3 className="mt-2 text-xl font-bold text-white sm:text-2xl">
-              {expenses.length}
+            <h3 className="mt-3 text-2xl font-bold text-[#F5F1E8]">
+              {loading ? "..." : expenses.length}
             </h3>
+            <p className="mt-2 text-xs text-[#817766]">
+              Total catatan pengeluaran
+            </p>
           </div>
 
-          <div className="rounded-lg border border-slate-800 bg-slate-950 p-3 sm:p-5">
-            <p className="text-xs text-slate-400 sm:text-sm">
+          <div className={cardClass}>
+            <p className="text-sm font-medium text-[#A79B86]">
               Jumlah Kategori
             </p>
-            <h3 className="mt-2 text-xl font-bold text-white sm:text-2xl">
-              {totalCategories}
+            <h3 className="mt-3 text-2xl font-bold text-[#F5F1E8]">
+              {loading ? "..." : totalCategories}
             </h3>
+            <p className="mt-2 text-xs text-[#817766]">
+              Kategori yang digunakan
+            </p>
           </div>
         </div>
 
         {/* FORM TAMBAH DAN EDIT */}
         <form
           onSubmit={handleSubmit}
-          className="mt-5 rounded-lg border border-slate-800 bg-slate-950 p-4 sm:p-5"
+          className="mt-6 overflow-hidden rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-4 shadow-lg sm:p-6"
         >
-          <h3 className="mb-4 text-base font-semibold text-white sm:text-lg">
-            {editingId !== null
-              ? "Edit Pengeluaran"
-              : "Tambah Pengeluaran Baru"}
-          </h3>
+          <div className="mb-6 flex items-center gap-3 border-b border-[#C9A96E]/15 pb-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#C9A96E]/30 bg-[#C9A96E]/10 text-xl text-[#C9A96E]">
+              {editingId !== null ? "✎" : "+"}
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-[#F5F1E8]">
+                {editingId !== null
+                  ? "Edit Pengeluaran"
+                  : "Tambah Pengeluaran Baru"}
+              </h3>
+              <p className="mt-1 text-xs text-[#8C8170]">
+                Catat transaksi pengeluaran bisnis Anda
+              </p>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm text-slate-300">
+              <label className="mb-2 block text-sm font-medium text-[#D8CEBD]">
                 Nama Pengeluaran
               </label>
               <input
@@ -358,7 +400,7 @@ function Expenses() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm text-slate-300">
+              <label className="mb-2 block text-sm font-medium text-[#D8CEBD]">
                 Kategori
               </label>
               <select
@@ -377,7 +419,7 @@ function Expenses() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm text-slate-300">
+              <label className="mb-2 block text-sm font-medium text-[#D8CEBD]">
                 Jumlah Pengeluaran (Rp)
               </label>
               <input
@@ -394,7 +436,7 @@ function Expenses() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm text-slate-300">
+              <label className="mb-2 block text-sm font-medium text-[#D8CEBD]">
                 Tanggal Pengeluaran
               </label>
               <input
@@ -408,8 +450,8 @@ function Expenses() {
             </div>
           </div>
 
-          <div className="mt-4">
-            <label className="mb-2 block text-sm text-slate-300">
+          <div className="mt-5">
+            <label className="mb-2 block text-sm font-medium text-[#D8CEBD]">
               Keterangan
             </label>
             <textarea
@@ -422,11 +464,11 @@ function Expenses() {
             />
           </div>
 
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <button
               type="submit"
               disabled={saving}
-              className="w-full rounded-lg bg-blue-600 px-5 py-3 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50 sm:w-auto"
+              className="w-full rounded-lg border border-[#D9BB83] bg-[#C9A96E] px-5 py-3 text-sm font-bold tracking-wide text-[#171717] transition hover:bg-[#E0C38C] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             >
               {saving
                 ? "Menyimpan..."
@@ -439,7 +481,7 @@ function Expenses() {
               <button
                 type="button"
                 onClick={resetForm}
-                className="w-full rounded-lg bg-slate-700 px-5 py-3 text-sm font-medium text-white hover:bg-slate-600 sm:w-auto"
+                className="w-full rounded-lg border border-[#C9A96E]/30 px-5 py-3 text-sm font-medium text-[#D9BB83] transition hover:bg-[#C9A96E]/10 sm:w-auto"
               >
                 Batal
               </button>
@@ -447,11 +489,16 @@ function Expenses() {
           </div>
         </form>
 
-        {/* PENCARIAN DAN FILTER */}
-        <div className="mt-6 rounded-lg border border-slate-800 bg-slate-950 p-4 sm:p-5">
-          <h3 className="mb-4 text-base font-semibold text-white">
-            Filter Pengeluaran
-          </h3>
+        {/* FILTER PENGELUARAN */}
+        <div className="mt-6 rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-4 shadow-lg sm:p-5">
+          <div className="mb-5 border-b border-[#C9A96E]/15 pb-4">
+            <h3 className="text-lg font-semibold text-[#F5F1E8]">
+              Filter Pengeluaran
+            </h3>
+            <p className="mt-1 text-xs text-[#8C8170]">
+              Cari dan saring transaksi berdasarkan kategori dan tanggal
+            </p>
+          </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <input
@@ -491,10 +538,10 @@ function Expenses() {
             />
           </div>
 
-          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-slate-400">
-              Total hasil filter:{" "}
-              <span className="font-semibold text-white">
+          <div className="mt-5 flex flex-col gap-3 border-t border-[#C9A96E]/15 pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-[#A79B86]">
+              Total hasil filter:
+              <span className="ml-2 font-bold text-[#E4C98F]">
                 {formatRupiah(filteredTotal)}
               </span>
             </p>
@@ -502,109 +549,126 @@ function Expenses() {
             <button
               type="button"
               onClick={resetFilter}
-              className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-600"
+              className="rounded-lg border border-[#C9A96E]/30 bg-[#C9A96E]/10 px-4 py-2.5 text-sm font-semibold text-[#D9BB83] transition hover:bg-[#C9A96E] hover:text-[#111111]"
             >
               Reset Filter
             </button>
           </div>
         </div>
 
-        <p className="mt-3 text-xs text-slate-400 sm:text-sm">
-          Menampilkan {filteredExpenses.length} dari {expenses.length} transaksi.
-        </p>
-
-        {/* PESAN */}
-        {error && (
-          <p className="mt-4 break-words rounded-lg bg-red-500/10 px-3 py-3 text-sm text-red-400">
-            {error}
+        {/* JUMLAH DATA */}
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-[#A79B86] sm:text-sm">
+            Menampilkan{" "}
+            <span className="font-semibold text-[#D9BB83]">
+              {filteredExpenses.length}
+            </span>{" "}
+            dari {expenses.length} transaksi.
           </p>
-        )}
-
-        {success && (
-          <p className="mt-4 break-words rounded-lg bg-green-500/10 px-3 py-3 text-sm text-green-400">
-            {success}
-          </p>
-        )}
+        </div>
 
         {/* TABEL PENGELUARAN */}
-        <div className="mt-5 overflow-x-auto rounded-lg border border-slate-800 bg-slate-950">
-          <table className="w-full min-w-[850px] text-left text-sm text-slate-300">
-            <thead className="bg-slate-900 text-slate-400">
-              <tr>
-                <th className="px-4 py-3">Nama Pengeluaran</th>
-                <th className="px-4 py-3">Kategori</th>
-                <th className="px-4 py-3">Jumlah</th>
-                <th className="px-4 py-3">Tanggal</th>
-                <th className="px-4 py-3">Keterangan</th>
-                <th className="px-4 py-3">Aksi</th>
-              </tr>
-            </thead>
+        <div className="mt-4 overflow-hidden rounded-xl border border-[#C9A96E]/20 bg-[#202020] shadow-lg">
+          <div className="border-b border-[#C9A96E]/15 px-4 py-4 sm:px-5">
+            <h3 className="font-semibold text-[#F5F1E8]">
+              Riwayat Pengeluaran
+            </h3>
+            <p className="mt-1 text-xs text-[#8C8170]">
+              Daftar transaksi pengeluaran bisnis
+            </p>
+          </div>
 
-            <tbody>
-              {loading ? (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[850px] text-left text-sm">
+              <thead className="border-b border-[#C9A96E]/15 bg-[#181818] text-[#A79B86]">
                 <tr>
-                  <td colSpan="6" className="px-4 py-6 text-center">
-                    Memuat data pengeluaran...
-                  </td>
+                  <th className="px-4 py-4 font-medium">Nama Pengeluaran</th>
+                  <th className="px-4 py-4 font-medium">Kategori</th>
+                  <th className="px-4 py-4 font-medium">Jumlah</th>
+                  <th className="px-4 py-4 font-medium">Tanggal</th>
+                  <th className="px-4 py-4 font-medium">Keterangan</th>
+                  <th className="px-4 py-4 font-medium">Aksi</th>
                 </tr>
-              ) : filteredExpenses.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="px-4 py-6 text-center">
-                    Belum ada data pengeluaran.
-                  </td>
-                </tr>
-              ) : (
-                filteredExpenses.map((expense) => (
-                  <tr
-                    key={expense.id}
-                    className="border-t border-slate-800"
-                  >
-                    <td className="px-4 py-3 font-medium text-white">
-                      {expense.title}
-                    </td>
+              </thead>
 
-                    <td className="px-4 py-3">
-                      {expense.category}
-                    </td>
-
-                    <td className="px-4 py-3 font-medium text-red-400">
-                      {formatRupiah(expense.amount)}
-                    </td>
-
-                    <td className="px-4 py-3">
-                      {new Date(
-                        `${expense.expense_date}T00:00:00`
-                      ).toLocaleDateString("id-ID")}
-                    </td>
-
-                    <td className="max-w-xs truncate px-4 py-3">
-                      {expense.description || "-"}
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleEdit(expense)}
-                          className="rounded bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-500"
-                        >
-                          Edit
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(expense)}
-                          className="rounded bg-red-600 px-3 py-2 text-xs font-medium text-white hover:bg-red-500"
-                        >
-                          Hapus
-                        </button>
-                      </div>
+              <tbody className="divide-y divide-[#C9A96E]/10 text-[#D8CEBD]">
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="px-4 py-10 text-center text-[#A79B86]"
+                    >
+                      Memuat data pengeluaran...
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : filteredExpenses.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="px-4 py-10 text-center text-[#8C8170]"
+                    >
+                      Belum ada data pengeluaran.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredExpenses.map((expense) => (
+                    <tr
+                      key={expense.id}
+                      className="transition hover:bg-[#29251E]/60"
+                    >
+                      <td className="px-4 py-4 font-medium text-[#F5F1E8]">
+                        {expense.title}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <span className="inline-flex rounded-full border border-[#C9A96E]/20 bg-[#C9A96E]/10 px-3 py-1 text-xs text-[#D9BB83]">
+                          {expense.category}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-4 font-semibold text-[#D9BB83]">
+                        {formatRupiah(expense.amount)}
+                      </td>
+
+                      <td className="px-4 py-4 whitespace-nowrap text-[#B5AA98]">
+                        {new Date(
+                          `${expense.expense_date}T00:00:00`
+                        ).toLocaleDateString("id-ID")}
+                      </td>
+
+                      <td className="max-w-xs truncate px-4 py-4 text-[#A79B86]">
+                        {expense.description || "-"}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(expense)}
+                            className="rounded-lg border border-[#C9A96E]/30 bg-[#C9A96E]/10 px-3 py-2 text-xs font-semibold text-[#D9BB83] transition hover:bg-[#C9A96E] hover:text-[#111111]"
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(expense)}
+                            className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-400 transition hover:bg-red-500/20"
+                          >
+                            Hapus
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <p className="border-t border-[#C9A96E]/10 px-4 py-3 text-xs text-[#817766] sm:hidden">
+            Geser tabel ke kiri atau kanan untuk melihat seluruh kolom.
+          </p>
         </div>
       </div>
     </DashboardLayout>

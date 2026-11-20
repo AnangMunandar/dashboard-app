@@ -14,6 +14,7 @@ const menu = [
   { to: "/profile", label: "Profil Bisnis" },
   { to: "/stock-adjustment", label: "Penyesuaian Stok" },
 ];
+
 function Sidebar() {
   const [profile, setProfile] = useState({
     business_name: "MasMuns",
@@ -46,40 +47,47 @@ function Sidebar() {
   }, []);
 
   return (
-    <aside className="w-full shrink-0 border-b border-slate-800 bg-slate-950 md:min-h-screen md:w-60 md:border-b-0 md:border-r">
-      <div className="flex items-center gap-3 px-5 py-4 md:px-6 md:py-5">
+    <aside className="flex w-full shrink-0 flex-col border-b border-[#C9A96E]/20 bg-[#171717] md:sticky md:top-0 md:h-screen md:w-64 md:border-b-0 md:border-r">
+      {/* BUSINESS IDENTITY */}
+      <div className="flex min-w-0 items-center gap-3 border-b border-[#C9A96E]/15 px-5 py-5 md:px-6 md:py-7">
         {profile.logo_url ? (
           <img
             src={profile.logo_url}
             alt="Logo bisnis"
-            className="h-11 w-11 shrink-0 rounded-lg bg-white object-contain p-1"
+            className="h-12 w-12 shrink-0 rounded-xl border border-[#C9A96E]/30 bg-white object-contain p-1"
           />
         ) : (
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-lg font-bold text-white">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#C9A96E]/40 bg-[#25221C] text-xl font-bold text-[#C9A96E]">
             {profile.business_name.charAt(0).toUpperCase()}
           </div>
         )}
 
-        <div className="min-w-0">
-          <p className="truncate text-lg font-bold text-white">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-lg font-bold tracking-wide text-[#F5F1E8]">
             {profile.business_name}
           </p>
-          <p className="text-xs text-slate-400">
+
+          <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.2em] text-[#C9A96E]">
             Business Dashboard
           </p>
         </div>
       </div>
 
-      <nav className="flex gap-2 overflow-x-auto px-3 pb-3 md:flex-col md:gap-1 md:pb-0">
+      {/* NAVIGATION */}
+      <nav className="flex gap-2 overflow-x-auto px-3 py-4 md:flex-1 md:flex-col md:gap-1.5 md:overflow-x-hidden md:overflow-y-auto md:px-4 md:py-6">
+        <p className="hidden px-3 pb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8C8170] md:block">
+          Main Menu
+        </p>
+
         {menu.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
+              `whitespace-nowrap rounded-lg border px-4 py-2.5 text-sm font-medium transition-all duration-200 md:w-full ${
                 isActive
-                  ? "bg-slate-800 text-white"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                  ? "border-[#C9A96E]/30 bg-[#C9A96E]/10 text-[#D9BB83] shadow-sm"
+                  : "border-transparent text-[#A7A29A] hover:border-[#C9A96E]/15 hover:bg-[#252525] hover:text-[#F5F1E8]"
               }`
             }
           >
@@ -87,6 +95,19 @@ function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      {/* SIDEBAR FOOTER */}
+      <div className="hidden px-6 pb-6 md:block">
+        <div className="border-t border-[#C9A96E]/15 pt-5">
+          <p className="text-xs text-[#8C8170]">
+            Powered by
+          </p>
+
+          <p className="mt-1 text-sm font-semibold tracking-wider text-[#C9A96E]">
+            MASMUNS
+          </p>
+        </div>
+      </div>
     </aside>
   );
 }

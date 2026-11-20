@@ -4,6 +4,9 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { supabase } from "../lib/supabaseClient";
 import { formatRupiah } from "../lib/format";
 
+const inputClass =
+  "w-full min-w-0 rounded-lg border border-[#C9A96E]/25 bg-[#171717] px-3 py-3 text-sm text-[#F5F1E8] outline-none transition placeholder:text-[#817765] focus:border-[#C9A96E] focus:ring-1 focus:ring-[#C9A96E]/30";
+
 function Products() {
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
@@ -280,105 +283,102 @@ function Products() {
     }
   }
 
-  const inputClass =
-    "w-full min-w-0 rounded-lg border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-white outline-none focus:border-blue-500";
+  const statCards = [
+    { title: "Total Produk", value: totalProducts },
+    { title: "Total Stok", value: totalStock },
+    { title: "Nilai Inventaris", value: formatRupiah(inventoryValue) },
+    { title: "Jumlah Kategori", value: totalCategories },
+  ];
 
   return (
     <DashboardLayout>
       <div className="min-w-0">
-        <h2 className="text-xl font-bold text-white sm:text-2xl">
-          Manajemen Produk
-        </h2>
-
-        <p className="mt-2 text-sm text-slate-300 sm:text-base">
-          Kelola seluruh produk bisnis kamu di sini.
-        </p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#C9A96E]">
+              Business Management
+            </p>
+            <h2 className="mt-2 text-xl font-bold tracking-tight text-[#F5F1E8] sm:text-2xl">
+              Manajemen Produk
+            </h2>
+            <p className="mt-2 text-sm text-[#A79B86] sm:text-base">
+              Kelola seluruh produk bisnis kamu di sini.
+            </p>
+          </div>
+        </div>
 
         {/* KARTU STATISTIK */}
-        <div className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
-          <div className="rounded-lg border border-slate-800 bg-slate-950 p-3 sm:p-5">
-            <p className="text-xs text-slate-400 sm:text-sm">
-              Total Produk
-            </p>
-            <h3 className="mt-2 text-xl font-bold text-white sm:text-2xl">
-              {totalProducts}
-            </h3>
-          </div>
-
-          <div className="rounded-lg border border-slate-800 bg-slate-950 p-3 sm:p-5">
-            <p className="text-xs text-slate-400 sm:text-sm">
-              Total Stok
-            </p>
-            <h3 className="mt-2 text-xl font-bold text-white sm:text-2xl">
-              {totalStock}
-            </h3>
-          </div>
-
-          <div className="rounded-lg border border-slate-800 bg-slate-950 p-3 sm:p-5">
-            <p className="text-xs text-slate-400 sm:text-sm">
-              Nilai Inventaris
-            </p>
-            <h3 className="mt-2 break-words text-base font-bold text-white sm:text-xl">
-              {formatRupiah(inventoryValue)}
-            </h3>
-          </div>
-
-          <div className="rounded-lg border border-slate-800 bg-slate-950 p-3 sm:p-5">
-            <p className="text-xs text-slate-400 sm:text-sm">
-              Jumlah Kategori
-            </p>
-            <h3 className="mt-2 text-xl font-bold text-white sm:text-2xl">
-              {totalCategories}
-            </h3>
-          </div>
+        <div className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
+          {statCards.map((item) => (
+            <div
+              key={item.title}
+              className="group relative min-w-0 overflow-hidden rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-3 shadow-lg transition hover:border-[#C9A96E]/50 sm:p-5"
+            >
+              <div className="absolute left-0 top-0 h-full w-1 bg-[#C9A96E]/70" />
+              <div className="pl-2">
+                <p className="text-xs font-medium tracking-wide text-[#A79B86] sm:text-sm">
+                  {item.title}
+                </p>
+                <h3 className="mt-2 break-words text-xl font-bold text-[#F5F1E8] sm:text-2xl">
+                  {item.value}
+                </h3>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* PENCARIAN DAN FILTER */}
-        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari nama produk..."
-            className={inputClass}
-          />
+        <div className="mt-6 rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-4 sm:p-5">
+          <h3 className="mb-4 text-sm font-semibold tracking-wide text-[#F5F1E8]">
+            Pencarian dan Filter Produk
+          </h3>
 
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className={inputClass}
-          >
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Cari nama produk..."
+              className={inputClass}
+            />
 
-          <select
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
-            className={inputClass}
-          >
-            <option value="terbaru">Terbaru</option>
-            <option value="termurah">Harga Termurah</option>
-            <option value="termahal">Harga Termahal</option>
-          </select>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className={inputClass}
+            >
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className={inputClass}
+            >
+              <option value="terbaru">Terbaru</option>
+              <option value="termurah">Harga Termurah</option>
+              <option value="termahal">Harga Termahal</option>
+            </select>
+          </div>
+
+          <p className="mt-3 text-xs text-[#8C8170] sm:text-sm">
+            Menampilkan {filteredProducts.length} dari {products.length} produk.
+          </p>
         </div>
-
-        <p className="mt-3 text-xs text-slate-400 sm:text-sm">
-          Menampilkan {filteredProducts.length} dari {products.length} produk.
-        </p>
 
         {/* PESAN */}
         {error && (
-          <p className="mt-4 break-words rounded-lg bg-red-500/10 px-3 py-3 text-sm text-red-400">
+          <p className="mt-4 break-words rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-3 text-sm text-red-400">
             {error}
           </p>
         )}
 
         {success && (
-          <p className="mt-4 break-words rounded-lg bg-green-500/10 px-3 py-3 text-sm text-green-400">
+          <p className="mt-4 break-words rounded-lg border border-[#C9A96E]/25 bg-[#C9A96E]/10 px-3 py-3 text-sm text-[#DCC18E]">
             {success}
           </p>
         )}
@@ -386,15 +386,26 @@ function Products() {
         {/* FORM TAMBAH DAN EDIT */}
         <form
           onSubmit={handleSubmit}
-          className="mt-5 rounded-lg border border-slate-800 bg-slate-950 p-4 sm:p-5"
+          className="mt-6 rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-4 shadow-lg sm:p-6"
         >
-          <h3 className="mb-4 text-base font-semibold text-white sm:text-lg">
-            {editingId !== null ? "Edit Produk" : "Tambah Produk Baru"}
-          </h3>
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#C9A96E]">
+                Product Management
+              </p>
+              <h3 className="mt-1 text-base font-semibold text-[#F5F1E8] sm:text-lg">
+                {editingId !== null ? "Edit Produk" : "Tambah Produk Baru"}
+              </h3>
+            </div>
+
+            <span className="rounded-full border border-[#C9A96E]/30 px-3 py-1 text-xs text-[#C9A96E]">
+              {editingId !== null ? "Mode Edit" : "Produk Baru"}
+            </span>
+          </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm text-slate-300">
+              <label className="mb-2 block text-sm text-[#C8BDAA]">
                 Nama Produk
               </label>
               <input
@@ -409,7 +420,7 @@ function Products() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm text-slate-300">
+              <label className="mb-2 block text-sm text-[#C8BDAA]">
                 Kategori
               </label>
               <input
@@ -423,7 +434,7 @@ function Products() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm text-slate-300">
+              <label className="mb-2 block text-sm text-[#C8BDAA]">
                 Harga (Rp)
               </label>
               <input
@@ -440,7 +451,7 @@ function Products() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm text-slate-300">
+              <label className="mb-2 block text-sm text-[#C8BDAA]">
                 Stok
               </label>
               <input
@@ -458,7 +469,7 @@ function Products() {
           </div>
 
           <div className="mt-4">
-            <label className="mb-2 block text-sm text-slate-300">
+            <label className="mb-2 block text-sm text-[#C8BDAA]">
               Deskripsi
             </label>
             <textarea
@@ -475,7 +486,7 @@ function Products() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full rounded-lg bg-blue-600 px-5 py-3 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50 sm:w-auto"
+              className="w-full rounded-lg bg-[#C9A96E] px-5 py-3 text-sm font-semibold text-[#17130D] transition hover:bg-[#D8B982] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             >
               {saving
                 ? "Menyimpan..."
@@ -488,7 +499,7 @@ function Products() {
               <button
                 type="button"
                 onClick={resetForm}
-                className="w-full rounded-lg bg-slate-700 px-5 py-3 text-sm font-medium text-white hover:bg-slate-600 sm:w-auto"
+                className="w-full rounded-lg border border-[#C9A96E]/30 bg-[#292929] px-5 py-3 text-sm font-medium text-[#D8C9AD] transition hover:bg-[#35302A] sm:w-auto"
               >
                 Batal
               </button>
@@ -497,80 +508,93 @@ function Products() {
         </form>
 
         {/* TABEL PRODUK */}
-        <div className="mt-6 overflow-x-auto rounded-lg border border-slate-800 bg-slate-950">
-          <table className="w-full min-w-[650px] text-left text-sm text-slate-300">
-            <thead className="bg-slate-900 text-slate-400">
-              <tr>
-                <th className="px-4 py-3">Nama Produk</th>
-                <th className="px-4 py-3">Kategori</th>
-                <th className="px-4 py-3">Harga</th>
-                <th className="px-4 py-3">Stok</th>
-                <th className="px-4 py-3">Aksi</th>
-              </tr>
-            </thead>
+        <div className="mt-6 overflow-hidden rounded-xl border border-[#C9A96E]/20 bg-[#202020] shadow-lg">
+          <div className="border-b border-[#C9A96E]/15 px-4 py-4 sm:px-5">
+            <h3 className="text-base font-semibold text-[#F5F1E8]">
+              Daftar Produk
+            </h3>
+            <p className="mt-1 text-xs text-[#8C8170]">
+              Data produk bisnis yang tersimpan.
+            </p>
+          </div>
 
-            <tbody>
-              {loading ? (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[650px] text-left text-sm text-[#C8BDAA]">
+              <thead className="bg-[#181818] text-xs uppercase tracking-wider text-[#C9A96E]">
                 <tr>
-                  <td colSpan="5" className="px-4 py-6 text-center">
-                    Memuat data produk...
-                  </td>
+                  <th className="px-4 py-4">Nama Produk</th>
+                  <th className="px-4 py-4">Kategori</th>
+                  <th className="px-4 py-4">Harga</th>
+                  <th className="px-4 py-4">Stok</th>
+                  <th className="px-4 py-4">Aksi</th>
                 </tr>
-              ) : filteredProducts.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="px-4 py-6 text-center">
-                    Produk tidak ditemukan.
-                  </td>
-                </tr>
-              ) : (
-                filteredProducts.map((product) => (
-                  <tr
-                    key={product.id}
-                    className="border-t border-slate-800"
-                  >
-                    <td className="px-4 py-3 font-medium text-white">
-                      {product.name}
-                    </td>
+              </thead>
 
-                    <td className="px-4 py-3">
-                      {product.category || "-"}
-                    </td>
-
-                    <td className="whitespace-nowrap px-4 py-3">
-                      {formatRupiah(product.price)}
-                    </td>
-
-                    <td className="px-4 py-3">
-                      {product.stock}
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleEdit(product)}
-                          className="rounded-lg bg-amber-600 px-4 py-2 text-xs font-medium text-white hover:bg-amber-500"
-                        >
-                          Edit
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(product)}
-                          className="rounded-lg bg-red-600 px-4 py-2 text-xs font-medium text-white hover:bg-red-500"
-                        >
-                          Hapus
-                        </button>
-                      </div>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan="5" className="px-4 py-8 text-center text-[#A79B86]">
+                      Memuat data produk...
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : filteredProducts.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="px-4 py-8 text-center text-[#A79B86]">
+                      Produk tidak ditemukan.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredProducts.map((product) => (
+                    <tr
+                      key={product.id}
+                      className="border-t border-[#C9A96E]/10 transition hover:bg-[#292929]"
+                    >
+                      <td className="px-4 py-4 font-medium text-[#F5F1E8]">
+                        {product.name}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        {product.category || "-"}
+                      </td>
+
+                      <td className="whitespace-nowrap px-4 py-4 text-[#D8C9AD]">
+                        {formatRupiah(product.price)}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <span className="inline-flex rounded-full border border-[#C9A96E]/20 bg-[#C9A96E]/10 px-3 py-1 text-xs font-medium text-[#D8C18F]">
+                          {product.stock}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(product)}
+                            className="rounded-lg border border-[#C9A96E]/40 px-3 py-2 text-xs font-medium text-[#D8C18F] transition hover:bg-[#C9A96E] hover:text-[#17130D]"
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(product)}
+                            className="rounded-lg border border-red-500/30 px-3 py-2 text-xs font-medium text-red-400 transition hover:bg-red-500/10"
+                          >
+                            Hapus
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <p className="mt-2 text-xs text-slate-500 sm:hidden">
+        <p className="mt-2 text-xs text-[#8C8170] sm:hidden">
           Geser tabel ke kiri atau kanan untuk melihat seluruh kolom.
         </p>
       </div>

@@ -154,7 +154,6 @@ function OrderForm({ onAdded }) {
       }
     }
 
-    // Pastikan produk tidak dipilih lebih dari satu kali
     const productIds = items.map((item) => item.productId);
 
     if (new Set(productIds).size !== productIds.length) {
@@ -198,32 +197,47 @@ function OrderForm({ onAdded }) {
   }
 
   const inputClass =
-    "w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none";
+    "w-full min-w-0 rounded-lg border border-[#C9A96E]/25 bg-[#171717] px-3 py-3 text-sm text-[#F5F1E8] placeholder-[#8C8170] outline-none transition focus:border-[#C9A96E] focus:ring-1 focus:ring-[#C9A96E]/30 disabled:opacity-50";
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-lg border border-slate-800 bg-slate-950 p-5"
+      className="w-full min-w-0 overflow-hidden rounded-xl border border-[#C9A96E]/20 bg-[#202020] p-4 shadow-lg sm:p-6"
     >
-      <h3 className="mb-4 text-lg font-semibold text-white">
-        Tambah Pesanan
-      </h3>
+      {/* Header */}
+      <div className="mb-6 border-b border-[#C9A96E]/15 pb-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#C9A96E]/30 bg-[#C9A96E]/10 text-lg text-[#C9A96E]">
+            +
+          </div>
+
+          <div className="min-w-0">
+            <h3 className="text-lg font-semibold tracking-wide text-[#F5F1E8]">
+              Tambah Pesanan
+            </h3>
+            <p className="mt-1 text-xs text-[#8C8170]">
+              Buat transaksi dan kelola produk pesanan
+            </p>
+          </div>
+        </div>
+      </div>
 
       {error && (
-        <p className="mb-4 rounded bg-red-500/10 px-3 py-2 text-sm text-red-400">
+        <p className="mb-5 break-words rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {error}
         </p>
       )}
 
       {loading ? (
-        <p className="text-sm text-slate-400">
+        <p className="py-6 text-center text-sm text-[#A79B86]">
           Memuat pelanggan dan produk...
         </p>
       ) : (
         <>
-          <div className="mb-5 grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-2 block text-sm text-slate-300">
+          {/* Customer and Status */}
+          <div className="mb-7 grid min-w-0 gap-5 sm:grid-cols-2">
+            <div className="min-w-0">
+              <label className="mb-2 block text-sm font-medium text-[#D8CEBD]">
                 Pelanggan
               </label>
 
@@ -244,14 +258,14 @@ function OrderForm({ onAdded }) {
               </select>
 
               {customers.length === 0 && (
-                <p className="mt-1 text-xs text-yellow-400">
+                <p className="mt-2 text-xs text-[#C9A96E]">
                   Belum ada pelanggan. Tambahkan pelanggan terlebih dahulu.
                 </p>
               )}
             </div>
 
-            <div>
-              <label className="mb-2 block text-sm text-slate-300">
+            <div className="min-w-0">
+              <label className="mb-2 block text-sm font-medium text-[#D8CEBD]">
                 Status Pesanan
               </label>
 
@@ -264,44 +278,51 @@ function OrderForm({ onAdded }) {
                 <option value="selesai">Selesai</option>
               </select>
 
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-[#8C8170]">
                 Stok akan berkurang jika pesanan langsung dibuat selesai.
               </p>
             </div>
           </div>
 
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <h4 className="font-semibold text-white">
-              Daftar Produk
-            </h4>
+          {/* Product Header */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h4 className="font-semibold text-[#F5F1E8]">
+                Daftar Produk
+              </h4>
+              <p className="mt-1 text-xs text-[#8C8170]">
+                Pilih produk dan tentukan jumlah pembelian
+              </p>
+            </div>
 
             <button
               type="button"
               onClick={addItem}
               disabled={products.length === 0}
-              className="rounded bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+              className="shrink-0 rounded-lg border border-[#C9A96E]/40 bg-[#C9A96E]/10 px-4 py-2.5 text-xs font-semibold text-[#D9BB83] transition hover:bg-[#C9A96E] hover:text-[#111111] disabled:cursor-not-allowed disabled:opacity-50"
             >
               + Tambah Produk
             </button>
           </div>
 
           {products.length === 0 && (
-            <p className="mb-4 rounded bg-yellow-500/10 p-3 text-sm text-yellow-400">
+            <p className="mb-4 break-words rounded-lg border border-[#C9A96E]/20 bg-[#C9A96E]/5 p-3 text-sm text-[#C9A96E]">
               Belum ada produk. Tambahkan produk terlebih dahulu.
             </p>
           )}
 
-          <div className="space-y-3">
+          {/* Product Items */}
+          <div className="min-w-0 space-y-4">
             {items.map((item, index) => {
               const product = getProduct(item.productId);
 
               return (
                 <div
                   key={index}
-                  className="rounded-lg border border-slate-800 bg-slate-900/60 p-3"
+                  className="min-w-0 rounded-xl border border-[#C9A96E]/15 bg-[#181818] p-4"
                 >
-                  <div className="mb-3 flex items-center justify-between">
-                    <span className="text-sm font-semibold text-slate-300">
+                  <div className="mb-4 flex items-center justify-between border-b border-[#C9A96E]/10 pb-3">
+                    <span className="text-sm font-semibold tracking-wide text-[#D9BB83]">
                       Produk {index + 1}
                     </span>
 
@@ -309,16 +330,16 @@ function OrderForm({ onAdded }) {
                       <button
                         type="button"
                         onClick={() => removeItem(index)}
-                        className="text-xs text-red-400 hover:text-red-300"
+                        className="text-xs font-medium text-red-400 transition hover:text-red-300"
                       >
                         Hapus
                       </button>
                     )}
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-xs text-slate-400">
+                  <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+                    <div className="min-w-0">
+                      <label className="mb-2 block text-xs font-medium text-[#B5AA98]">
                         Pilih Produk
                       </label>
 
@@ -352,8 +373,8 @@ function OrderForm({ onAdded }) {
                       </select>
                     </div>
 
-                    <div>
-                      <label className="mb-1 block text-xs text-slate-400">
+                    <div className="min-w-0">
+                      <label className="mb-2 block text-xs font-medium text-[#B5AA98]">
                         Jumlah
                       </label>
 
@@ -372,16 +393,16 @@ function OrderForm({ onAdded }) {
                   </div>
 
                   {product && (
-                    <div className="mt-3 flex flex-wrap justify-between gap-2 text-xs">
-                      <span className="text-slate-400">
+                    <div className="mt-4 grid min-w-0 gap-2 border-t border-[#C9A96E]/10 pt-3 text-xs sm:grid-cols-3">
+                      <span className="break-words text-[#A79B86]">
                         Harga: {formatRupiah(product.price)}
                       </span>
 
-                      <span className="text-slate-400">
+                      <span className="break-words text-[#A79B86]">
                         Stok tersedia: {product.stock}
                       </span>
 
-                      <span className="font-semibold text-blue-400">
+                      <span className="break-words font-semibold text-[#D9BB83] sm:text-right">
                         Subtotal: {formatRupiah(getSubtotal(item))}
                       </span>
                     </div>
@@ -391,18 +412,25 @@ function OrderForm({ onAdded }) {
             })}
           </div>
 
-          <div className="mt-5 rounded-lg border border-blue-500/30 bg-blue-500/10 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-medium text-slate-300">
-                Total Pesanan
-              </span>
+          {/* Total */}
+          <div className="mt-6 rounded-xl border border-[#C9A96E]/30 bg-[#C9A96E]/10 p-4 sm:p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs font-medium uppercase tracking-[0.15em] text-[#B5AA98]">
+                  Total Pesanan
+                </p>
+                <p className="mt-1 text-xs text-[#8C8170]">
+                  Jumlah keseluruhan produk
+                </p>
+              </div>
 
-              <span className="text-xl font-bold text-white">
+              <span className="break-words text-xl font-bold text-[#E4C98F] sm:text-2xl">
                 {formatRupiah(totalAmount)}
               </span>
             </div>
           </div>
 
+          {/* Submit */}
           <button
             type="submit"
             disabled={
@@ -411,7 +439,7 @@ function OrderForm({ onAdded }) {
               customers.length === 0 ||
               products.length === 0
             }
-            className="mt-5 w-full rounded bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+            className="mt-6 w-full rounded-lg border border-[#D9BB83] bg-[#C9A96E] px-5 py-3.5 text-sm font-bold tracking-wide text-[#171717] shadow-md transition duration-200 hover:bg-[#E0C38C] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           >
             {saving ? "Menyimpan Pesanan..." : "Simpan Pesanan"}
           </button>
