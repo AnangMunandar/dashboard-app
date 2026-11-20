@@ -28,7 +28,9 @@ function formatDate(date) {
 function StockHistory() {
   const [movements, setMovements] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("semua");
 
@@ -37,6 +39,7 @@ function StockHistory() {
   async function loadMovements() {
     setLoading(true);
     setError("");
+    setSuccess("");
 
     const {
       data: { user },
@@ -62,6 +65,57 @@ function StockHistory() {
     }
 
     setLoading(false);
+  }
+
+  async function handleDeleteAllMovements() {
+    if (movements.length === 0 || deleting) return;
+
+    const confirmed = window.confirm(
+      `Apakah kamu yakin ingin menghapus SEMUA ${movements.length} riwayat stok milik akun ini? Tindakan ini tidak dapat dibatalkan. Jumlah stok produk saat ini tidak akan diubah oleh fitur ini.`
+    );
+
+    if (!confirmed) return;
+
+    setDeleting(true);
+    setError("");
+    setSuccess("");
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      setError("Sesi pengguna tidak ditemukan. Silakan login kembali.");
+      setDeleting(false);
+      return;
+    }
+
+    const { data: deletedRows, error: deleteError } = await supabase
+      .from("stock_movements")
+      .delete()
+      .eq("user_id", user.id)
+      .select("id");
+
+    if (deleteError) {
+      setError(
+        `Riwayat stok gagal dihapus: ${deleteError.message}. Pastikan kebijakan akses Supabase mengizinkan akun ini menghapus riwayat miliknya.`
+      );
+    } else if (!deletedRows || deletedRows.length === 0) {
+      setError(
+        "Tidak ada riwayat yang terhapus. Periksa kembali izin hapus pada tabel stock_movements di Supabase."
+      );
+    } else {
+      setMovements([]);
+      setSearch("");
+      setFilter("semua");
+      sessionStorage.removeItem(SCROLL_STORAGE_KEY);
+      setSuccess(
+        `${deletedRows.length} riwayat stok berhasil dihapus. Jumlah stok produk saat ini tidak diubah oleh fitur ini.`
+      );
+    }
+
+    setDeleting(false);
   }
 
   useEffect(() => {
@@ -186,14 +240,25 @@ function StockHistory() {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={loadMovements}
-              disabled={loading}
-              className="w-full rounded-lg bg-[#C9A96E] px-4 py-3 text-sm font-semibold text-[#17130D] transition hover:bg-[#D8B982] disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
-            >
-              {loading ? "Memuat..." : "Muat Ulang"}
-            </button>
+            <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
+              <button
+                type="button"
+                onClick={loadMovements}
+                disabled={loading || deleting}
+                className="w-full rounded-lg bg-[#C9A96E] px-4 py-3 text-sm font-semibold text-[#17130D] transition hover:bg-[#D8B982] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+              >
+                {loading ? "Memuat..." : "Muat Ulang"}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDeleteAllMovements}
+                disabled={loading || deleting || movements.length === 0}
+                className="w-full rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-400 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+              >
+                {deleting ? "Menghapus..." : "Hapus Semua Riwayat"}
+              </button>
+            </div>
           </div>
 
           {/* PENCARIAN DAN FILTER */}
@@ -217,10 +282,16 @@ function StockHistory() {
             </select>
           </div>
 
-          {/* ERROR */}
+          {/* NOTIFIKASI */}
           {error && (
-            <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
+            <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
               {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-4 rounded-lg border border-[#C9A96E]/20 bg-[#C9A96E]/10 p-4 text-sm text-[#D8B982]">
+              {success}
             </div>
           )}
 
@@ -320,7 +391,8 @@ function StockHistory() {
           ) : null}
 
           <p className="mt-4 text-xs text-[#8C8170]">
-            Menampilkan {filteredMovements.length} dari {movements.length} riwayat.
+            Menampilkan {filteredMovements.length} dari {movements.length}{" "}
+            riwayat.
           </p>
 
           <p className="mt-2 text-xs text-[#8C8170] sm:hidden">
